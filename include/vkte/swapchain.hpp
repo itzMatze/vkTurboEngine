@@ -18,6 +18,7 @@ public:
 	const RenderPass& get_render_pass() const;
 	vk::Extent2D get_extent() const;
 	vk::Framebuffer get_framebuffer(uint32_t idx) const;
+	uint32_t get_framebuffer_count() const;
 
 private:
 	const VulkanMainContext& vmc;

@@ -29,6 +29,11 @@ vk::Framebuffer Swapchain::get_framebuffer(uint32_t idx) const
 	return framebuffers[idx];
 }
 
+uint32_t Swapchain::get_framebuffer_count() const
+{
+	return framebuffers.size();
+}
+
 void Swapchain::construct(bool vsync)
 {
 	construct(vsync, true);
