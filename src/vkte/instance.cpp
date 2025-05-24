@@ -17,7 +17,7 @@ void Instance::construct(std::vector<const char*> required_extensions)
 	ai.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	ai.pEngineName = "No Engine";
 	ai.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	ai.apiVersion = VK_API_VERSION_1_3;
+	ai.apiVersion = VK_API_VERSION_1_4;
 
 	// use ExtensionHandler class to check if extensions and validation layers are available
 	std::vector<vk::ExtensionProperties> available_extensions = vk::enumerateInstanceExtensionProperties();
