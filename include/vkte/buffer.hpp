@@ -28,7 +28,7 @@ public:
 	{
 		if (device_local)
 		{
-			std::tie(buffer, vmaa) = create_buffer((usage_flags | vk::BufferUsageFlagBits::eTransferDst), {}, device_local, queues);
+			std::tie(buffer, vmaa) = create_buffer((usage_flags | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eTransferSrc), {}, device_local, queues);
 		}
 		else
 		{
@@ -189,7 +189,7 @@ public:
 	template<class T>
 	void obtain_all_data(std::vector<T>& output)
 	{
-		assert(output.size() >= element_count);
+		if (output.size() < element_count) output.resize(element_count);
 		obtain_data_bytes(output.data(), sizeof(T) * element_count);
 	}
 
