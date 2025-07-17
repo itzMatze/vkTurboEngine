@@ -33,6 +33,7 @@ void LogicalDevice::construct(const PhysicalDevice& p_device, const QueueFamilie
 	vk::PhysicalDeviceVulkan13Features device_features_13;
 	device_features_13.pNext = &device_features_12;
 	device_features_13.synchronization2 = VK_TRUE;
+	device_features_13.shaderDemoteToHelperInvocation = VK_TRUE;
 
 	vk::PhysicalDeviceFeatures core_device_features{};
 	core_device_features.samplerAnisotropy = VK_TRUE;
