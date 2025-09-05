@@ -15,6 +15,7 @@ set(SOURCE_FILES
 	src/vkte/instance.cpp
 	src/vkte/logical_device.cpp
 	src/vkte/physical_device.cpp
+	src/vkte/acceleration_structure_builder.cpp
 	src/vkte/pipeline.cpp
 	src/vkte/queue_families.cpp
 	src/vkte/render_pass.cpp
