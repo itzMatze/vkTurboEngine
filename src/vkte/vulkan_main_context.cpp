@@ -31,15 +31,18 @@ static VKAPI_ATTR vk::Bool32 VKAPI_CALL debug_callback(vk::DebugUtilsMessageSeve
 namespace vkte
 {
 #if ENABLE_VKTE_WINDOW
-void VulkanMainContext::construct(const std::string& title, const uint32_t width, const uint32_t height)
+void VulkanMainContext::construct(const std::string& title, const uint32_t width, const uint32_t height, const std::vector<const char*>& required_instance_extensions, const std::vector<const char*>& required_device_extensions, const std::vector<const char*>& validation_layers)
 {
 	PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 	window = Window(title, width, height);
-	instance.construct(window.get_required_extensions());
+	std::vector<const char*> instance_extensions = required_instance_extensions;
+	std::vector<const char*> window_instance_extensions = window.get_required_extensions();
+	instance_extensions.insert(instance_extensions.end(), window_instance_extensions.begin(), window_instance_extensions.end());
+	instance.construct(instance_extensions, validation_layers);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(instance.get());
 	surface = window.create_surface(instance.get());
-	physical_device.construct(instance, surface);
+	physical_device.construct(instance, required_device_extensions, surface);
 	queue_families.construct(physical_device.get(), surface);
 	logical_device.construct(physical_device, queue_families, queues);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(logical_device.get());
@@ -47,13 +50,13 @@ void VulkanMainContext::construct(const std::string& title, const uint32_t width
 	setup_debug_messenger();
 }
 #else
-void VulkanMainContext::construct()
+void VulkanMainContext::construct(const std::vector<const char*>& required_instance_extensions, const std::vector<const char*>& required_device_extensions, const std::vector<const char*>& validation_layers)
 {
 	PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
-	instance.construct({});
+	instance.construct(required_instance_extensions, validation_layers);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(instance.get());
-	physical_device.construct(instance, {});
+	physical_device.construct(instance, required_device_extensions, std::nullopt);
 	queue_families.construct(physical_device.get(), {});
 	logical_device.construct(physical_device, queue_families, queues);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(logical_device.get());

@@ -11,7 +11,7 @@ class Instance
 {
 public:
 	Instance() = default;
-	void construct(std::vector<const char*> required_extensions);
+	void construct(std::vector<const char*> required_extensions, std::vector<const char*> validation_layers);
 	void destruct();
 	const vk::Instance& get() const;
 	const std::vector<const char*>& get_missing_extensions() const;

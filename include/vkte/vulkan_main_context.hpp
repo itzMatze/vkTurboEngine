@@ -14,9 +14,9 @@ class VulkanMainContext
 public:
 	VulkanMainContext() = default;
 #if ENABLE_VKTE_WINDOW
-	void construct(const std::string& title, const uint32_t width, const uint32_t height);
+	void construct(const std::string& title, const uint32_t width, const uint32_t height, const std::vector<const char*>& required_instance_extensions, const std::vector<const char*>& required_device_extensions, const std::vector<const char*>& validation_layers);
 #else
-	void construct();
+	void construct(const std::vector<const char*>& required_instance_extensions, const std::vector<const char*>& required_device_extensions, const std::vector<const char*>& validation_layers);
 #endif
 	void destruct();
 #if ENABLE_VKTE_WINDOW

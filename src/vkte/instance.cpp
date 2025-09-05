@@ -5,11 +5,10 @@
 
 namespace vkte
 {
-void Instance::construct(std::vector<const char*> required_extensions)
+void Instance::construct(std::vector<const char*> required_extensions, std::vector<const char*> validation_layers)
 {
 	required_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	const std::vector<const char*> optional_extensions{};
-	const std::vector<const char*> validation_layers{"VK_LAYER_KHRONOS_validation"};
 
 	vk::ApplicationInfo ai{};
 	ai.sType = vk::StructureType::eApplicationInfo;

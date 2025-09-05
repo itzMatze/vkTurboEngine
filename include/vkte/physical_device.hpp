@@ -12,7 +12,7 @@ class PhysicalDevice
 {
 public:
 	PhysicalDevice() = default;
-	void construct(const Instance& instance, const std::optional<vk::SurfaceKHR>& surface);
+	void construct(const Instance& instance, const std::vector<const char*>& required_extensions, const std::optional<vk::SurfaceKHR>& surface);
 	vk::PhysicalDevice get() const;
 	const std::vector<const char*>& get_extensions() const;
 	const std::vector<const char*>& get_missing_extensions();
