@@ -29,6 +29,7 @@ void LogicalDevice::construct(const PhysicalDevice& p_device, const QueueFamilie
 	vk::PhysicalDeviceVulkan12Features device_features_12;
 	device_features_12.pNext = &as_features;
 	device_features_12.bufferDeviceAddress = VK_TRUE;
+	device_features_12.scalarBlockLayout = VK_TRUE;
 
 	vk::PhysicalDeviceVulkan13Features device_features_13;
 	device_features_13.pNext = &device_features_12;
