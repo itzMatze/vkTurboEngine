@@ -7,6 +7,8 @@ DescriptorSetHandler::DescriptorSetHandler(const VulkanMainContext& vmc, uint32_
 
 void DescriptorSetHandler::add_binding(uint32_t binding, vk::DescriptorType type, vk::ShaderStageFlags stages, uint32_t descriptor_count)
 {
+	// Vulkan does not allow a descriptor count of 0, just pretend one descriptor will be added and never add it
+	descriptor_count = std::max(descriptor_count, 1u);
 	for (auto i = descriptors.begin(); i != descriptors.end(); ++i)
 	{
 		if (i->dslb.binding > binding)
@@ -63,10 +65,17 @@ void DescriptorSetHandler::construct()
 	for (const auto& d : descriptors) layout_bindings.push_back(d.dslb);
 	for (uint32_t i = 0; i < set_count; ++i)
 	{
+		std::vector<vk::DescriptorBindingFlags> binding_flags(layout_bindings.size(), vk::DescriptorBindingFlagBits::ePartiallyBound);
+		vk::DescriptorSetLayoutBindingFlagsCreateInfo dslbfci{};
+		dslbfci.sType = vk::StructureType::eDescriptorSetLayoutBindingFlagsCreateInfo;
+		dslbfci.bindingCount = layout_bindings.size();
+		dslbfci.pBindingFlags = binding_flags.data();
+
 		vk::DescriptorSetLayoutCreateInfo dslci{};
 		dslci.sType = vk::StructureType::eDescriptorSetLayoutCreateInfo;
 		dslci.bindingCount = layout_bindings.size();
 		dslci.pBindings = layout_bindings.data();
+		dslci.pNext = &dslbfci;
 		layouts.push_back(vmc.logical_device.get().createDescriptorSetLayout(dslci));
 	}
 
@@ -76,7 +85,7 @@ void DescriptorSetHandler::construct()
 		vk::DescriptorPoolSize dps{};
 		dps.type = d.dslb.descriptorType;
 		dps.descriptorCount = d.dslb.descriptorCount * set_count;
-		pool_sizes.push_back(dps);
+		if (dps.descriptorCount > 0) pool_sizes.push_back(dps);
 	}
 
 	vk::DescriptorPoolCreateInfo dpci{};
@@ -114,7 +123,7 @@ void DescriptorSetHandler::construct()
 			wds.descriptorCount = std::max(descriptors[j].dii[i].size(), descriptors[j].dbi[i].size());
 			wds.pTexelBufferView = nullptr;
 
-			wds_s.push_back(wds);
+			if (wds.descriptorCount > 0) wds_s.push_back(wds);
 		}
 	}
 	vmc.logical_device.get().updateDescriptorSets(wds_s, {});

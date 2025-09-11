@@ -30,6 +30,9 @@ void LogicalDevice::construct(const PhysicalDevice& p_device, const QueueFamilie
 	device_features_12.pNext = &as_features;
 	device_features_12.bufferDeviceAddress = VK_TRUE;
 	device_features_12.scalarBlockLayout = VK_TRUE;
+	device_features_12.descriptorBindingPartiallyBound = VK_TRUE;
+	device_features_12.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+	device_features_12.runtimeDescriptorArray = VK_TRUE;
 
 	vk::PhysicalDeviceVulkan13Features device_features_13;
 	device_features_13.pNext = &device_features_12;
