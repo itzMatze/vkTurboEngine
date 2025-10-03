@@ -3,6 +3,8 @@
 #include <SDL3/SDL.h>
 #include <vector>
 
+namespace vkte
+{
 enum class Key : uint32_t
 {
 	A = 0,
@@ -88,3 +90,4 @@ private:
 	void apply_key_event(Key k, uint32_t et);
 	static uint32_t get_idx(Key key);
 };
+} // namespace vkte

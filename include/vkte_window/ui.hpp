@@ -4,6 +4,8 @@
 #include "vkte/vulkan_main_context.hpp"
 #include "vkte/vulkan_command_context.hpp"
 
+namespace vkte
+{
 class UI
 {
 public:
@@ -17,3 +19,4 @@ private:
 	const vkte::VulkanMainContext& vmc;
 	vk::DescriptorPool imgui_pool;
 };
+} // namespace vkte

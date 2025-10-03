@@ -4,6 +4,8 @@
 #include <vulkan/vulkan.hpp>
 #include "SDL3/SDL_video.h"
 
+namespace vkte
+{
 class Window
 {
 public:
@@ -17,3 +19,4 @@ public:
 private:
 	SDL_Window* window;
 };
+} // namespace vkte

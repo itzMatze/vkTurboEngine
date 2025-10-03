@@ -3,6 +3,8 @@
 #include "backends/imgui_impl_vulkan.h"
 #include "backends/imgui_impl_sdl3.h"
 
+namespace vkte
+{
 UI::UI(const vkte::VulkanMainContext& vmc) : vmc(vmc)
 {}
 
@@ -77,3 +79,4 @@ void UI::end_frame(vk::CommandBuffer& cb)
 	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cb);
 }
+} // namespace vkte

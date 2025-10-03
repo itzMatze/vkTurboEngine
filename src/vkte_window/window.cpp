@@ -5,6 +5,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 
+namespace vkte
+{
 Window::Window(const std::string& title, const uint32_t width, const uint32_t height)
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -40,3 +42,4 @@ vk::SurfaceKHR Window::create_surface(const vk::Instance& instance)
 	VKTE_ASSERT(SDL_Vulkan_CreateSurface(window, instance, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)), "Failed to create surface!");
 	return surface;
 }
+} // namespace vkte

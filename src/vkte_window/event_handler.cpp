@@ -2,6 +2,8 @@
 
 #include "backends/imgui_impl_sdl3.h"
 
+namespace vkte
+{
 EventHandler::EventHandler() : pressed_keys(get_idx(Key::Size), false), released_keys(get_idx(Key::Size), false)
 {}
 
@@ -249,3 +251,4 @@ uint32_t EventHandler::get_idx(Key key)
 {
 	return static_cast<uint32_t>(key);
 }
+} // namespace vkte
