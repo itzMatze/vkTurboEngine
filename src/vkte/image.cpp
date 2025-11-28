@@ -263,6 +263,18 @@ void Image::transition_image_layout(VulkanCommandContext& vcc, vk::ImageLayout n
 	layout = new_layout;
 }
 
+VmaAllocation Image::get_allocation() const
+{
+	return vmaa;
+}
+
+VmaAllocationInfo Image::get_allocation_info() const
+{
+	VmaAllocationInfo alloc_info;
+	vmaGetAllocationInfo(vmc.va, vmaa, &alloc_info);
+	return alloc_info;
+}
+
 vk::DeviceSize Image::get_byte_size() const
 {
 	return byte_size;
@@ -291,13 +303,6 @@ vk::ImageView Image::get_view() const
 vk::Sampler Image::get_sampler() const
 {
 	return sampler;
-}
-
-VmaAllocationInfo Image::get_allocation_info() const
-{
-	VmaAllocationInfo alloc_info;
-	vmaGetAllocationInfo(vmc.va, vmaa, &alloc_info);
-	return alloc_info;
 }
 
 void Image::generate_mipmaps(VulkanCommandContext& vcc)

@@ -29,6 +29,11 @@ vk::Framebuffer Swapchain::get_framebuffer(uint32_t idx) const
 	return framebuffers[idx];
 }
 
+vk::Image Swapchain::get_framebuffer_image(uint32_t idx) const
+{
+	return images[idx];
+}
+
 uint32_t Swapchain::get_framebuffer_count() const
 {
 	return framebuffers.size();
@@ -88,7 +93,7 @@ vk::SwapchainKHR Swapchain::create_swapchain(bool vsync)
 	sci.imageColorSpace = surface_format.colorSpace;
 	sci.imageExtent = extent;
 	sci.imageArrayLayers = 1;
-	sci.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
+	sci.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc;
 	sci.preTransform = capabilities.currentTransform;
 	sci.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
 	sci.presentMode = choose_present_mode(vsync);
