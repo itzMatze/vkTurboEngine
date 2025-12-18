@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 option(ENABLE_VKTE_LOGGING "Enable vkte logging" OFF)
 
 set(SDL3_DIR "${PROJECT_SOURCE_DIR}/dependencies/SDL3")
+set(SPDLOG_DIR "${PROJECT_SOURCE_DIR}/dependencies/spdlog")
 
 set(SOURCE_FILES
 	src/vkte/command_pool.cpp
@@ -26,7 +27,8 @@ set(SOURCE_FILES
 	src/vkte/vulkan_main_context.cpp
 )
 
-find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-shared)
+add_subdirectory("${SDL3_DIR}")
+add_subdirectory("${SPDLOG_DIR}")
 find_package(Vulkan REQUIRED)
 
 add_library(vkte_headless ${SOURCE_FILES})
@@ -35,6 +37,9 @@ target_include_directories(vkte_headless PUBLIC
 	"${PROJECT_SOURCE_DIR}/private/"
 	Vulkan::Headers
 	"${PROJECT_SOURCE_DIR}/dependencies/VulkanMemoryAllocator/include/"
+)
+target_link_libraries(vkte_headless PUBLIC
+	spdlog::spdlog
 )
 target_compile_definitions(vkte_headless PUBLIC VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 IMGUI_IMPL_VULKAN_NO_PROTOTYPES=1)
 if (ENABLE_VKTE_LOGGING)
@@ -61,7 +66,10 @@ target_include_directories(vkte_window PUBLIC
 	"${PROJECT_SOURCE_DIR}/dependencies/imgui/"
 	"${PROJECT_SOURCE_DIR}/dependencies/VulkanMemoryAllocator/include/"
 )
-target_link_libraries(vkte_window PUBLIC SDL3::SDL3)
+target_link_libraries(vkte_window PUBLIC
+	SDL3::SDL3
+	spdlog::spdlog
+)
 target_compile_definitions(vkte_window PUBLIC VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 IMGUI_IMPL_VULKAN_NO_PROTOTYPES=1 ENABLE_VKTE_WINDOW=1)
 if (ENABLE_VKTE_LOGGING)
 	target_compile_definitions(vkte_window PUBLIC VKTE_LOGGING=1)

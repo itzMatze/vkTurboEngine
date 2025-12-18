@@ -4,7 +4,9 @@
 #include "vkte/queue_families.hpp"
 #include "vkte/logical_device.hpp"
 #include "vkte/physical_device.hpp"
+#if ENABLE_VKTE_WINDOW
 #include "vkte_window/window.hpp"
+#endif
 #include "vk_mem_alloc.h"
 
 namespace vkte
