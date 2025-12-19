@@ -35,7 +35,8 @@ void VulkanMainContext::construct(const std::string& title, const uint32_t width
 {
 	PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
-	window = Window(title, width, height);
+	window.construct(title, width, height);
+	window.hide();
 	std::vector<const char*> instance_extensions = required_instance_extensions;
 	std::vector<const char*> window_instance_extensions = window.get_required_extensions();
 	instance_extensions.insert(instance_extensions.end(), window_instance_extensions.begin(), window_instance_extensions.end());
@@ -48,6 +49,7 @@ void VulkanMainContext::construct(const std::string& title, const uint32_t width
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(logical_device.get());
 	create_vma_allocator();
 	setup_debug_messenger();
+	window.show();
 }
 #else
 void VulkanMainContext::construct(const std::vector<const char*>& required_instance_extensions, const std::vector<const char*>& required_device_extensions, const std::vector<const char*>& validation_layers)
@@ -71,9 +73,7 @@ void VulkanMainContext::destruct()
 	vmaDestroyAllocator(va);
 	instance.get().destroySurfaceKHR(surface);
 	logical_device.destruct();
-#if ENABLE_VKTE_WINDOW
 	instance.get().destroyDebugUtilsMessengerEXT(debug_messenger, nullptr, VULKAN_HPP_DEFAULT_DISPATCHER);
-#endif
 	instance.destruct();
 #if ENABLE_VKTE_WINDOW
 	window.destruct();

@@ -10,8 +10,10 @@ class Window
 {
 public:
 	Window() = default;
-	Window(const std::string& title, const uint32_t width, const uint32_t height);
+	void construct(const std::string& title, const uint32_t width, const uint32_t height);
 	void destruct();
+	void hide();
+	void show();
 	SDL_Window* get() const;
 	std::vector<const char*> get_required_extensions() const;
 	vk::SurfaceKHR create_surface(const vk::Instance& instance);

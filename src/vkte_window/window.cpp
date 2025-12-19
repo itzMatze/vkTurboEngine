@@ -7,7 +7,7 @@
 
 namespace vkte
 {
-Window::Window(const std::string& title, const uint32_t width, const uint32_t height)
+void Window::construct(const std::string& title, const uint32_t width, const uint32_t height)
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 	window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_VULKAN);
@@ -17,6 +17,16 @@ void Window::destruct()
 {
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+}
+
+void Window::hide()
+{
+	SDL_HideWindow(window);
+}
+
+void Window::show()
+{
+	SDL_ShowWindow(window);
 }
 
 SDL_Window* Window::get() const
@@ -39,7 +49,7 @@ std::vector<const char*> Window::get_required_extensions() const
 vk::SurfaceKHR Window::create_surface(const vk::Instance& instance)
 {
 	vk::SurfaceKHR surface;
-	VKTE_ASSERT(SDL_Vulkan_CreateSurface(window, instance, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)), "vkte: Failed to create surface!");
+	VKTE_ASSERT(SDL_Vulkan_CreateSurface(window, instance, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)), "Failed to create surface!");
 	return surface;
 }
 } // namespace vkte
