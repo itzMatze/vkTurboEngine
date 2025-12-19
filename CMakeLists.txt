@@ -7,6 +7,8 @@ option(ENABLE_VKTE_LOGGING "Enable vkte logging" OFF)
 set(SDL3_DIR "${PROJECT_SOURCE_DIR}/dependencies/SDL3")
 set(SPDLOG_DIR "${PROJECT_SOURCE_DIR}/dependencies/spdlog")
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 set(SOURCE_FILES
 	src/vkte/command_pool.cpp
 	src/vkte/descriptor_set_handler.cpp
@@ -40,10 +42,11 @@ target_include_directories(vkte_headless PUBLIC
 target_link_libraries(vkte_headless PUBLIC
 	spdlog::spdlog
 )
-target_compile_definitions(vkte_headless PUBLIC VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 IMGUI_IMPL_VULKAN_NO_PROTOTYPES=1)
+target_compile_definitions(vkte_headless PUBLIC VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 VULKAN_HPP_STORAGE_SHARED=1 IMGUI_IMPL_VULKAN_NO_PROTOTYPES=1)
 if (ENABLE_VKTE_LOGGING)
 	target_compile_definitions(vkte_headless PUBLIC VKTE_LOGGING=1)
 endif()
+target_compile_definitions(vkte_headless PRIVATE VULKAN_HPP_STORAGE_SHARED_EXPORT=1)
 
 add_library(vkte_window ${SOURCE_FILES}
 	src/vkte/swapchain.cpp
@@ -69,10 +72,11 @@ target_link_libraries(vkte_window PUBLIC
 	SDL3::SDL3
 	spdlog::spdlog
 )
-target_compile_definitions(vkte_window PUBLIC VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 IMGUI_IMPL_VULKAN_NO_PROTOTYPES=1 ENABLE_VKTE_WINDOW=1)
+target_compile_definitions(vkte_window PUBLIC VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 VULKAN_HPP_STORAGE_SHARED=1 IMGUI_IMPL_VULKAN_NO_PROTOTYPES=1 ENABLE_VKTE_WINDOW=1)
 if (ENABLE_VKTE_LOGGING)
 	target_compile_definitions(vkte_window PUBLIC VKTE_LOGGING=1)
 endif()
+target_compile_definitions(vkte_window PRIVATE VULKAN_HPP_STORAGE_SHARED_EXPORT=1)
 
 add_library(vkte::headless ALIAS vkte_headless)
 add_library(vkte::window ALIAS vkte_window)
