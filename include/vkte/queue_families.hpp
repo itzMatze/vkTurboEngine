@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <vector>
-#include <vulkan/vulkan.hpp>
+#include "vulkan/vulkan.hpp"
 #include "named_bitfield.hpp"
 
 enum class QueueFamilyFlags : uint32_t

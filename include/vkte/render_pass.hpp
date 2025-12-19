@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
+#include "vulkan/vulkan.hpp"
 #include "vkte/vulkan_main_context.hpp"
 
 namespace vkte

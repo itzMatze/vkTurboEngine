@@ -1,7 +1,6 @@
 #include "vkte/instance.hpp"
 
 #include "vkte/vkte_log.hpp"
-#include <vulkan/vulkan.hpp>
 
 namespace vkte
 {

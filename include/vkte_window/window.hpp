@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <vulkan/vulkan.hpp>
+#include "vulkan/vulkan.hpp"
 #include "SDL3/SDL_video.h"
 
 namespace vkte

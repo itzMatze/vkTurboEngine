@@ -1,7 +1,7 @@
 #pragma once
 
 #include <utility>
-#include <vulkan/vulkan.hpp>
+#include "vulkan/vulkan.hpp"
 
 #include "vkte/queue_families.hpp"
 #include "vkte/vkte_log.hpp"

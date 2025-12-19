@@ -29,14 +29,13 @@ set(SOURCE_FILES
 
 add_subdirectory("${SDL3_DIR}")
 add_subdirectory("${SPDLOG_DIR}")
-find_package(Vulkan REQUIRED)
 
 add_library(vkte_headless ${SOURCE_FILES})
 target_include_directories(vkte_headless PUBLIC
 	"${PROJECT_SOURCE_DIR}/include/"
 	"${PROJECT_SOURCE_DIR}/private/"
-	Vulkan::Headers
 	"${PROJECT_SOURCE_DIR}/dependencies/VulkanMemoryAllocator/include/"
+	"${PROJECT_SOURCE_DIR}/dependencies/Vulkan_Headers/include/"
 )
 target_link_libraries(vkte_headless PUBLIC
 	spdlog::spdlog
@@ -61,10 +60,10 @@ add_library(vkte_window ${SOURCE_FILES}
 target_include_directories(vkte_window PUBLIC
 	"${PROJECT_SOURCE_DIR}/include/"
 	"${PROJECT_SOURCE_DIR}/private/"
-	Vulkan::Headers
 	"${SDL3_DIR}/include/"
 	"${PROJECT_SOURCE_DIR}/dependencies/imgui/"
 	"${PROJECT_SOURCE_DIR}/dependencies/VulkanMemoryAllocator/include/"
+	"${PROJECT_SOURCE_DIR}/dependencies/Vulkan_Headers/include/"
 )
 target_link_libraries(vkte_window PUBLIC
 	SDL3::SDL3

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optional>
-#include <vulkan/vulkan.hpp>
+#include "vulkan/vulkan.hpp"
 
 #include "vkte/extensions_handler.hpp"
 #include "vkte/instance.hpp"
