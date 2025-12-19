@@ -207,6 +207,6 @@ vk::Format Swapchain::choose_depth_format()
 			return format;
 		}
 	}
-	VKTE_THROW("Failed to find supported format!");
+	VKTE_THROW("vkte: Failed to find supported format!");
 }
 } // namespace vkte

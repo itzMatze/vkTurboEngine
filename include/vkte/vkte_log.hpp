@@ -6,17 +6,17 @@
 #define VKTE_CHECKING 1
 
 #if VKTE_LOGGING
-#define VKTE_THROW(...)               \
-{                                     \
-	spdlog::error(__VA_ARGS__);         \
-	std::string s(__FILE__);            \
-	s.append(": ");                     \
+#define VKTE_THROW(...) \
+{ \
+	spdlog::error(__VA_ARGS__); \
+	std::string s(__FILE__); \
+	s.append(": "); \
 	s.append(std::to_string(__LINE__)); \
-	spdlog::throw_spdlog_ex(s);         \
+	spdlog::throw_spdlog_ex(s); \
 }
 #else
-#define VKTE_THROW(...)                  \
-{                                        \
+#define VKTE_THROW(...) \
+{ \
 	throw std::runtime_error(__VA_ARGS__); \
 }
 #endif

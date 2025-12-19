@@ -39,7 +39,7 @@ std::vector<const char*> Window::get_required_extensions() const
 vk::SurfaceKHR Window::create_surface(const vk::Instance& instance)
 {
 	vk::SurfaceKHR surface;
-	VKTE_ASSERT(SDL_Vulkan_CreateSurface(window, instance, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)), "Failed to create surface!");
+	VKTE_ASSERT(SDL_Vulkan_CreateSurface(window, instance, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)), "vkte: Failed to create surface!");
 	return surface;
 }
 } // namespace vkte

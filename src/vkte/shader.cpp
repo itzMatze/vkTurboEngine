@@ -15,7 +15,7 @@ Shader::Shader(const vk::Device& device, const std::string filename, vk::ShaderS
 	if (!std::filesystem::exists(shader_bin_dir)) std::filesystem::create_directory(shader_bin_dir);
 	std::filesystem::path shader_file(shader_dir / filename);
 	std::filesystem::path shader_bin_file(shader_bin_dir / (filename + ".spv"));
-	VKTE_ASSERT(std::filesystem::exists(shader_file), "Failed to find shader file \"" + filename + "\"");
+	VKTE_ASSERT(std::filesystem::exists(shader_file), "vkte: Failed to find shader file \"" + filename + "\"");
 	const std::string glslc_args = std::format("--target-env=vulkan1.4 -O -o {0} {1}", shader_bin_file.string(), shader_file.string());
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 	system(("glslc.exe " + glslc_args).c_str());
@@ -53,7 +53,7 @@ const vk::PipelineShaderStageCreateInfo& Shader::get_stage_create_info() const
 std::string Shader::read_shader_file(const std::string& filename)
 {
 	std::ifstream file(filename, std::ios::binary);
-	VKTE_ASSERT(file.is_open(), "Failed to open shader file \"" + filename + "\"");
+	VKTE_ASSERT(file.is_open(), "vkte: Failed to open shader file \"" + filename + "\"");
 	std::ostringstream file_stream;
 	file_stream << file.rdbuf();
 	return file_stream.str();

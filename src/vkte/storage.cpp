@@ -104,25 +104,25 @@ void Storage::clear()
 
 Buffer& Storage::get_buffer(uint32_t idx)
 {
-	if (!buffers.at(idx).buffer.has_value()) VKTE_THROW("Trying to get already destroyed buffer!");
+	if (!buffers.at(idx).buffer.has_value()) VKTE_THROW("vkte:Trying to get already destroyed buffer!");
 	return buffers.at(idx).buffer.value();
 }
 
 Image& Storage::get_image(uint32_t idx)
 {
-	if (!images.at(idx).image.has_value()) VKTE_THROW("Trying to get already destroyed image!");
+	if (!images.at(idx).image.has_value()) VKTE_THROW("vkte:Trying to get already destroyed image!");
 	return images.at(idx).image.value();
 }
 
 Buffer& Storage::get_buffer_by_name(const std::string& name)
 {
-	if (!buffer_names.contains(name)) VKTE_THROW("Failed to find buffer with name: " + name);
+	if (!buffer_names.contains(name)) VKTE_THROW("vkte:Failed to find buffer with name: " + name);
 	return get_buffer(buffer_names.at(name));
 }
 
 Image& Storage::get_image_by_name(const std::string& name)
 {
-	if (!image_names.contains(name)) VKTE_THROW("Failed to find image with name: " + name);
+	if (!image_names.contains(name)) VKTE_THROW("vkte:Failed to find image with name: " + name);
 	return get_image(image_names.at(name));
 }
 } // namespace vkte

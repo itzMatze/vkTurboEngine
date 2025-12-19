@@ -20,7 +20,7 @@ public:
 	template<class Precision = std::milli>
 	double inline get_result_by_idx(uint32_t i)
 	{
-		VKTE_ASSERT(i < result_fetched.size(), "Trying to access invalid timer index.");
+		VKTE_ASSERT(i < result_fetched.size(), "vkte: Trying to access invalid timer index.");
 		return fetch_result<Precision>(i);
 	}
 

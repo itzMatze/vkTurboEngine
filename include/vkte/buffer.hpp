@@ -58,7 +58,7 @@ public:
 
 	void update_data_bytes(int constant, std::size_t byte_count)
 	{
-		VKTE_ASSERT(byte_count <= byte_size, "Data is larger than buffer!");
+		VKTE_ASSERT(byte_count <= byte_size, "vkte: Data is larger than buffer!");
 
 		if (device_local)
 		{
@@ -90,7 +90,7 @@ public:
 
 	void update_data_bytes(const void* data, std::size_t byte_count)
 	{
-		VKTE_ASSERT(byte_count <= byte_size, "Data is larger than buffer!");
+		VKTE_ASSERT(byte_count <= byte_size, "vkte: Data is larger than buffer!");
 
 		if (device_local)
 		{
@@ -140,7 +140,7 @@ public:
 
 	void obtain_data_bytes(void* data, std::size_t byte_count)
 	{
-		VKTE_ASSERT(byte_count <= byte_size, "Cannot get more bytes than size of buffer!");
+		VKTE_ASSERT(byte_count <= byte_size, "vkte: Cannot get more bytes than size of buffer!");
 
 		if (device_local)
 		{
