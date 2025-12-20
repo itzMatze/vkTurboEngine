@@ -4,43 +4,57 @@
 #include "vkte/render_pass.hpp"
 #include "vkte/vulkan_main_context.hpp"
 #include "vkte/shader.hpp"
+#include <memory>
 
 namespace vkte
 {
 class Pipeline
 {
 public:
-	Pipeline(const VulkanMainContext& vmc);
-
 	struct GraphicsSettings
 	{
 		const RenderPass* render_pass;
 		const vk::DescriptorSetLayout* set_layout;
-		const std::vector<ShaderInfo>* shader_infos;
+		std::vector<Shader> shaders;
 		vk::PolygonMode polygon_mode = vk::PolygonMode::eFill;
-		const vk::VertexInputBindingDescription* binding_descriptions = nullptr;
-		const std::vector<vk::VertexInputAttributeDescription>* attribute_description = nullptr;
 		vk::PrimitiveTopology primitive_topology = vk::PrimitiveTopology::eTriangleList;
-		const std::vector<vk::PushConstantRange>* pcrs = nullptr;
+		std::vector<vk::VertexInputBindingDescription> binding_descriptions;
+		std::vector<vk::VertexInputAttributeDescription> attribute_description;
+		std::vector<vk::PushConstantRange> pcrs;
 	};
-
-	void construct(const GraphicsSettings& settings);
 
 	struct ComputeSettings
 	{
 		const vk::DescriptorSetLayout* set_layout;
-		const ShaderInfo* shader_info;
+		Shader shader;
 		uint32_t push_constant_byte_size = 0;
 	};
 
-	void construct(const ComputeSettings& settings);
+	enum class Type
+	{
+		Graphics,
+		Compute
+	};
+
+	Pipeline(const VulkanMainContext& vmc, Type type);
+	GraphicsSettings& get_graphics_settings();
+	ComputeSettings& get_compute_settings();
+
+	bool compile_shaders();
+	void construct();
 	void destruct();
 	const vk::Pipeline& get() const;
 	const vk::PipelineLayout& get_layout() const;
 
 private:
+	Type type;
+	std::unique_ptr<GraphicsSettings> graphics_settings;
+	std::unique_ptr<ComputeSettings> compute_settings;
+
 	const VulkanMainContext& vmc;
 	vk::PipelineLayout pipeline_layout;
 	vk::Pipeline pipeline;
+	std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
+	std::vector<vk::SpecializationInfo> spec_infos;
 };
 } // namespace vkte

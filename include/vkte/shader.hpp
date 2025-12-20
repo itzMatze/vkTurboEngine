@@ -5,27 +5,27 @@
 
 namespace vkte
 {
-struct ShaderInfo
-{
-	std::string shader_name;
-	vk::ShaderStageFlagBits stage_flag;
-	vk::SpecializationInfo spec_info = {};
-};
-
 class Shader
 {
 public:
-	Shader(const vk::Device& device, const std::string filename, vk::ShaderStageFlagBits shader_stage_flag);
-	void destruct();
-	const vk::ShaderModule get() const;
-	const vk::PipelineShaderStageCreateInfo& get_stage_create_info() const;
+	Shader() = default;
+	Shader(const std::string& name, vk::ShaderStageFlagBits stage_flag);
+	std::string name;
+	vk::ShaderStageFlagBits stage_flag;
+
+	template<typename T>
+	void add_specialization_constant(uint32_t id, T data)
+	{
+		static_assert(sizeof(T) == 4, "Can only use 4 byte specialization constants.");
+		spec_entries_data.push_back(data);
+		spec_entries.push_back(vk::SpecializationMapEntry(id, 4 * spec_entries.size(), 4));
+	}
+
+	const std::vector<uint32_t>& get_spec_entries_data() const;
+	const std::vector<vk::SpecializationMapEntry>& get_spec_entries() const;
 
 private:
-	const std::string name;
-	const vk::Device& device;
-	vk::ShaderModule shader_module;
-	vk::PipelineShaderStageCreateInfo pssci;
-
-	std::string read_shader_file(const std::string& filename);
+	std::vector<uint32_t> spec_entries_data;
+	std::vector<vk::SpecializationMapEntry> spec_entries;
 };
 } // namespace vkte
