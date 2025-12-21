@@ -244,6 +244,13 @@ void Pipeline::construct()
 	}
 }
 
+void Pipeline::reconstruct()
+{
+	vmc.logical_device.get().destroyPipeline(pipeline);
+	vmc.logical_device.get().destroyPipelineLayout(pipeline_layout);
+	construct();
+}
+
 void Pipeline::destruct()
 {
 	for (vk::PipelineShaderStageCreateInfo& pssci : shader_stages) vmc.logical_device.get().destroyShaderModule(pssci.module);

@@ -42,6 +42,7 @@ public:
 
 	bool compile_shaders();
 	void construct();
+	void reconstruct();
 	void destruct();
 	const vk::Pipeline& get() const;
 	const vk::PipelineLayout& get_layout() const;
