@@ -56,7 +56,7 @@ static bool EMSCRIPTENAUDIO_PlayDevice(SDL_AudioDevice *device, const Uint8 *buf
             }
 
             for (var j = 0; j < $1; ++j) {
-                channelData[j] = HEAPF32[buf + (j*numChannels + c)];
+                channelData[j] = HEAPF32[buf + (j * numChannels + c)];
             }
         }
     }, buffer, buffer_size / framelen);
@@ -155,9 +155,10 @@ static bool EMSCRIPTENAUDIO_OpenDevice(SDL_AudioDevice *device)
             Module['SDL3'] = {};
         }
         var SDL3 = Module['SDL3'];
-        if (!$0) {
+        if (typeof(SDL3.audio_playback) === 'undefined') {
             SDL3.audio_playback = {};
-        } else {
+        }
+        if (typeof(SDL3.audio_recording) === 'undefined') {
             SDL3.audio_recording = {};
         }
 
@@ -174,7 +175,7 @@ static bool EMSCRIPTENAUDIO_OpenDevice(SDL_AudioDevice *device)
             }
         }
         return (SDL3.audioContext !== undefined);
-    }, device->recording);
+    });
 
     if (!result) {
         return SDL_SetError("Web Audio API is not available!");
@@ -189,7 +190,7 @@ static bool EMSCRIPTENAUDIO_OpenDevice(SDL_AudioDevice *device)
     }
 
     // limit to native freq
-    device->spec.freq = EM_ASM_INT({ return Module['SDL3'].audioContext.sampleRate; });
+    device->spec.freq = MAIN_THREAD_EM_ASM_INT({ return Module['SDL3'].audioContext.sampleRate; });
     device->sample_frames = SDL_GetDefaultSampleFramesFromFreq(device->spec.freq) * 2;  // double the buffer size, some browsers need more, and we'll just have to live with the latency.
 
     SDL_UpdatedAudioDeviceFormat(device);
