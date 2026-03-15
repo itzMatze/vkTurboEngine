@@ -31,36 +31,47 @@ static VKAPI_ATTR vk::Bool32 VKAPI_CALL debug_callback(vk::DebugUtilsMessageSeve
 namespace vkte
 {
 #if ENABLE_VKTE_WINDOW
-void VulkanMainContext::construct(const std::string& title, const uint32_t width, const uint32_t height, const std::vector<const char*>& required_instance_extensions, const std::vector<const char*>& required_device_extensions, const std::vector<const char*>& validation_layers)
+void VulkanMainContext::construct(const std::string& title, const uint32_t width, const uint32_t height, const Features& features)
 {
+	this->features = features;
 	PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 	window.construct(title, width, height);
 	window.hide();
-	std::vector<const char*> instance_extensions = required_instance_extensions;
-	std::vector<const char*> window_instance_extensions = window.get_required_extensions();
-	instance_extensions.insert(instance_extensions.end(), window_instance_extensions.begin(), window_instance_extensions.end());
+	std::vector<const char*> instance_extensions = window.get_required_extensions();
+	std::vector<const char*> validation_layers;
+	if (features.khronos_validation) validation_layers.push_back("VK_LAYER_KHRONOS_validation");
 	instance.construct(instance_extensions, validation_layers);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(instance.get());
 	surface = window.create_surface(instance.get());
-	physical_device.construct(instance, required_device_extensions, surface);
+	std::vector<const char*> device_extensions;
+	if (features.swapchain) device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	if (features.device_features.dynamic_polygon_mode) device_extensions.push_back(VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME);
+	physical_device.construct(instance, device_extensions, surface);
 	queue_families.construct(physical_device.get(), surface);
-	logical_device.construct(physical_device, queue_families, queues);
+	logical_device.construct(physical_device, features.device_features, queue_families, queues);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(logical_device.get());
 	create_vma_allocator();
 	setup_debug_messenger();
 	window.show();
 }
 #else
-void VulkanMainContext::construct(const std::vector<const char*>& required_instance_extensions, const std::vector<const char*>& required_device_extensions, const std::vector<const char*>& validation_layers)
+void VulkanMainContext::construct(const Features& features)
 {
+	this->features = features;
 	PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
-	instance.construct(required_instance_extensions, validation_layers);
+	std::vector<const char*> instance_extensions;
+	std::vector<const char*> validation_layers;
+	if (features.khronos_validation) validation_layers.push_back("VK_LAYER_KHRONOS_validation");
+	instance.construct(instance_extensions, validation_layers);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(instance.get());
-	physical_device.construct(instance, required_device_extensions, std::nullopt);
+	std::vector<const char*> device_extensions;
+	if (features.swapchain) device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	if (features.device_features.dynamic_polygon_mode) device_extensions.push_back(VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME);
+	physical_device.construct(instance, device_extensions, std::nullopt);
 	queue_families.construct(physical_device.get(), {});
-	logical_device.construct(physical_device, queue_families, queues);
+	logical_device.construct(physical_device, features.device_features, queue_families, queues);
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(logical_device.get());
 	create_vma_allocator();
 	setup_debug_messenger();
@@ -115,6 +126,11 @@ const vk::Queue& VulkanMainContext::get_compute_queue() const
 const vk::Queue& VulkanMainContext::get_present_queue() const
 {
 	return queues.at(QueueIndex::Present);
+}
+
+const Features& VulkanMainContext::get_features() const
+{
+	return features;
 }
 
 void VulkanMainContext::create_vma_allocator()

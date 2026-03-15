@@ -4,27 +4,30 @@
 
 namespace vkte
 {
-void LogicalDevice::construct(const PhysicalDevice& p_device, const QueueFamilies& queue_families, std::unordered_map<QueueIndex, vk::Queue>& queues)
+void LogicalDevice::construct(const PhysicalDevice& p_device, const Features& features, const QueueFamilies& queue_families, std::unordered_map<QueueIndex, vk::Queue>& queues)
 {
 	std::vector<vk::DeviceQueueCreateInfo> qci_s;
 	std::vector<uint32_t> queue_indices = queue_families.get(QueueFamilyFlags::Graphics | QueueFamilyFlags::Compute | QueueFamilyFlags::Transfer | QueueFamilyFlags::Present);
 	float queue_prio = 1.0f;
 	for (uint32_t queue_family : queue_indices)
 	{
-		vk::DeviceQueueCreateInfo qci{};
-		qci.sType = vk::StructureType::eDeviceQueueCreateInfo;
+		vk::DeviceQueueCreateInfo qci;
 		qci.queueFamilyIndex = queue_family;
 		qci.queueCount = 1;
 		qci.pQueuePriorities = &queue_prio;
 		qci_s.push_back(qci);
 	}
 
+	vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT dynamic_state_3;
+	dynamic_state_3.extendedDynamicState3PolygonMode = features.dynamic_polygon_mode ? VK_TRUE : VK_FALSE;
+
 	vk::PhysicalDeviceRayQueryFeaturesKHR rq_features;
-	rq_features.rayQuery = VK_TRUE;
+	rq_features.pNext = &dynamic_state_3;
+	rq_features.rayQuery = features.ray_query ? VK_TRUE : VK_FALSE;
 
 	vk::PhysicalDeviceAccelerationStructureFeaturesKHR as_features;
 	as_features.pNext = &rq_features;
-	as_features.accelerationStructure = VK_TRUE;
+	as_features.accelerationStructure = features.acceleration_structure ? VK_TRUE : VK_FALSE;
 
 	vk::PhysicalDeviceVulkan12Features device_features_12;
 	device_features_12.pNext = &as_features;
@@ -39,7 +42,7 @@ void LogicalDevice::construct(const PhysicalDevice& p_device, const QueueFamilie
 	device_features_13.synchronization2 = VK_TRUE;
 	device_features_13.shaderDemoteToHelperInvocation = VK_TRUE;
 
-	vk::PhysicalDeviceFeatures core_device_features{};
+	vk::PhysicalDeviceFeatures core_device_features;
 	core_device_features.samplerAnisotropy = VK_TRUE;
 	core_device_features.sampleRateShading = VK_TRUE;
 	core_device_features.fillModeNonSolid = VK_TRUE;
@@ -50,8 +53,7 @@ void LogicalDevice::construct(const PhysicalDevice& p_device, const QueueFamilie
 	device_features.pNext = &device_features_13;
 	device_features.features = core_device_features;
 
-	vk::DeviceCreateInfo dci{};
-	dci.sType = vk::StructureType::eDeviceCreateInfo;
+	vk::DeviceCreateInfo dci;
 	dci.pNext = &device_features;
 	dci.queueCreateInfoCount = qci_s.size();
 	dci.pQueueCreateInfos = qci_s.data();

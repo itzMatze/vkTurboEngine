@@ -91,6 +91,7 @@ void Pipeline::construct()
 	if (type == Type::Graphics)
 	{
 		std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+		if (vmc.get_features().device_features.dynamic_polygon_mode) dynamic_states.push_back(vk::DynamicState::ePolygonModeEXT);
 		vk::PipelineDynamicStateCreateInfo pdsci{};
 		pdsci.sType = vk::StructureType::ePipelineDynamicStateCreateInfo;
 		pdsci.dynamicStateCount = dynamic_states.size();
