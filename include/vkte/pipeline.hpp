@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vulkan/vulkan.hpp"
-#include "vkte/render_pass.hpp"
 #include "vkte/vulkan_main_context.hpp"
 #include "vkte/shader.hpp"
 #include <memory>
@@ -13,7 +12,8 @@ class Pipeline
 public:
 	struct GraphicsSettings
 	{
-		const RenderPass* render_pass;
+		std::vector<vk::Format> color_formats;
+		vk::Format depth_format = vk::Format::eUndefined;
 		const vk::DescriptorSetLayout* set_layout;
 		std::vector<Shader> shaders;
 		vk::PolygonMode polygon_mode = vk::PolygonMode::eFill;
@@ -21,6 +21,7 @@ public:
 		std::vector<vk::VertexInputBindingDescription> binding_descriptions;
 		std::vector<vk::VertexInputAttributeDescription> attribute_description;
 		std::vector<vk::PushConstantRange> pcrs;
+		bool additive_blending = false;
 	};
 
 	struct ComputeSettings

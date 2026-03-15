@@ -2,13 +2,16 @@
 #include "imgui.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "backends/imgui_impl_sdl3.h"
+#include "vkte/swapchain.hpp"
+#include "vkte/vulkan_command_context.hpp"
+#include "vkte/vulkan_main_context.hpp"
 
 namespace vkte
 {
 UI::UI(const vkte::VulkanMainContext& vmc) : vmc(vmc)
 {}
 
-void UI::construct(vkte::VulkanCommandContext& vcc, const vkte::RenderPass& render_pass, uint32_t frames)
+void UI::construct(const vkte::Swapchain& swapchain)
 {
 	std::vector<vk::DescriptorPoolSize> pool_sizes =
 	{
@@ -33,21 +36,33 @@ void UI::construct(vkte::VulkanCommandContext& vcc, const vkte::RenderPass& rend
 
 	imgui_pool = vmc.logical_device.get().createDescriptorPool(dpci);
 
+	VkFormat color_fmt = static_cast<VkFormat>(swapchain.get_color_format());
+	VkFormat depth_fmt = static_cast<VkFormat>(swapchain.get_depth_format());
+
+	VkPipelineRenderingCreateInfoKHR pipeline_rendering_info{};
+	pipeline_rendering_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+	pipeline_rendering_info.colorAttachmentCount = 1;
+	pipeline_rendering_info.pColorAttachmentFormats = &color_fmt;
+	pipeline_rendering_info.depthAttachmentFormat = depth_fmt;
+	pipeline_rendering_info.stencilAttachmentFormat = has_stencil(swapchain.get_depth_format()) ? depth_fmt : VK_FORMAT_UNDEFINED;
+
 	ImGui::CreateContext();
 	ImGui_ImplSDL3_InitForVulkan(vmc.window.get());
 	ImGui_ImplVulkan_InitInfo init_info{};
+	init_info.ApiVersion = VK_API_VERSION_1_4;
 	init_info.Instance = vmc.instance.get();
 	init_info.PhysicalDevice = vmc.physical_device.get();
 	init_info.Device = vmc.logical_device.get();
 	init_info.Queue = vmc.get_graphics_queue();
 	init_info.DescriptorPool = imgui_pool;
-	init_info.RenderPass = render_pass.get();
-	init_info.Subpass = 0;
-	init_info.MinImageCount = frames;
-	init_info.ImageCount = frames;
+	init_info.RenderPass = VK_NULL_HANDLE;
+	init_info.UseDynamicRendering = true;
+	init_info.PipelineRenderingCreateInfo = pipeline_rendering_info;
+	init_info.MinImageCount = swapchain.get_image_count();
+	init_info.ImageCount = swapchain.get_image_count();
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-	ImGui_ImplVulkan_LoadFunctions(VK_API_VERSION_1_3, [](const char* function_name, void* userData) {
+	ImGui_ImplVulkan_LoadFunctions(VK_API_VERSION_1_4, [](const char* function_name, void* userData) {
 		return VULKAN_HPP_DEFAULT_DISPATCHER.vkGetInstanceProcAddr(VkInstance(userData), function_name);
 	}, (void*)(vmc.instance.get()));
 

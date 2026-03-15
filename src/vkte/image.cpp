@@ -5,6 +5,80 @@
 
 namespace vkte
 {
+bool has_stencil(vk::Format depth_format)
+{
+	return depth_format == vk::Format::eD24UnormS8Uint || depth_format == vk::Format::eD32SfloatS8Uint;
+}
+
+vk::ImageAspectFlags default_aspect_for_format(vk::Format format)
+{
+	switch (format)
+	{
+		case vk::Format::eD16Unorm:
+		case vk::Format::eD32Sfloat:
+			return vk::ImageAspectFlagBits::eDepth;
+		case vk::Format::eS8Uint:
+			return vk::ImageAspectFlagBits::eStencil;
+		case vk::Format::eD24UnormS8Uint:
+		case vk::Format::eD32SfloatS8Uint:
+			return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+		default:
+			return vk::ImageAspectFlagBits::eColor;
+	}
+}
+
+void perform_image_layout_transition(vk::CommandBuffer& cb, const ImageTransitionDesc& t)
+{
+	vk::ImageMemoryBarrier2 b;
+	b.srcStageMask = t.src_stage;
+	b.srcAccessMask = t.src_access;
+	b.dstStageMask = t.dst_stage;
+	b.dstAccessMask = t.dst_access;
+	b.oldLayout = t.old_layout;
+	b.newLayout = t.new_layout;
+	b.srcQueueFamilyIndex = t.src_queue_family;
+	b.dstQueueFamilyIndex = t.dst_queue_family;
+	b.image = t.image;
+	b.subresourceRange.aspectMask = t.range.aspect;
+	b.subresourceRange.baseMipLevel = t.range.base_mip_level;
+	b.subresourceRange.levelCount = t.range.level_count;
+	b.subresourceRange.baseArrayLayer = t.range.base_array_layer;
+	b.subresourceRange.layerCount = t.range.layer_count;
+	vk::DependencyInfo dep;
+	dep.imageMemoryBarrierCount = 1;
+	dep.pImageMemoryBarriers = &b;
+	cb.pipelineBarrier2(dep);
+}
+
+void perform_image_layout_transition(vk::CommandBuffer& cb, const std::vector<ImageTransitionDesc>& transitions)
+{
+	std::vector<vk::ImageMemoryBarrier2> barriers;
+	barriers.reserve(transitions.size());
+	for (const ImageTransitionDesc& t : transitions)
+	{
+		vk::ImageMemoryBarrier2 b;
+		b.srcStageMask = t.src_stage;
+		b.srcAccessMask = t.src_access;
+		b.dstStageMask = t.dst_stage;
+		b.dstAccessMask = t.dst_access;
+		b.oldLayout = t.old_layout;
+		b.newLayout = t.new_layout;
+		b.srcQueueFamilyIndex = t.src_queue_family;
+		b.dstQueueFamilyIndex = t.dst_queue_family;
+		b.image = t.image;
+		b.subresourceRange.aspectMask = t.range.aspect;
+		b.subresourceRange.baseMipLevel = t.range.base_mip_level;
+		b.subresourceRange.levelCount = t.range.level_count;
+		b.subresourceRange.baseArrayLayer = t.range.base_array_layer;
+		b.subresourceRange.layerCount = t.range.layer_count;
+		barriers.push_back(b);
+	}
+	vk::DependencyInfo dep;
+	dep.imageMemoryBarrierCount = barriers.size();
+	dep.pImageMemoryBarriers = barriers.data();
+	cb.pipelineBarrier2(dep);
+}
+
 Image::Image(const VulkanMainContext& vmc, VulkanCommandContext& vcc, const unsigned char* data, uint32_t width, uint32_t height, bool use_mip_maps, uint32_t base_mip_map_lvl, Queues queues, vk::ImageUsageFlags usage_flags) : vmc(vmc), w(width), h(height), c(4), byte_size(width * height * 4), mip_levels(use_mip_maps ? std::floor(std::log2(std::max(w, h))) + 1 : 1), layer_count(1)
 {
 	create_image_from_data(data, vcc, queues, base_mip_map_lvl, usage_flags);
@@ -24,7 +98,7 @@ Image::Image(const VulkanMainContext& vmc, const VulkanCommandContext& vcc, uint
 {
 	std::tie(image, vmaa) = create_image(queues, usage, sample_count, use_mip_maps, format, vk::Extent3D(w, h, 1), layer_count, vmc.va, !image_view_required);
 	layout = vk::ImageLayout::eUndefined;
-	if(image_view_required) create_image_view(usage & vk::ImageUsageFlagBits::eDepthStencilAttachment ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor);
+	if(image_view_required) create_image_view(default_aspect_for_format(format));
 }
 
 void blit_image(vk::CommandBuffer& cb, vk::Image& src, uint32_t src_mip_map_lvl, vk::Offset3D src_offset, vk::Image& dst, uint32_t dst_mip_map_lvl, vk::Offset3D dst_offset, uint32_t layer_count)
@@ -96,28 +170,6 @@ std::pair<vk::Image, VmaAllocation> Image::create_image(Queues queues, vk::Image
 	return image;
 }
 
-void perform_image_layout_transition(vk::CommandBuffer& cb, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::PipelineStageFlags src_stage_flags, vk::PipelineStageFlags dst_stage_flags, vk::AccessFlags src_access_flags, vk::AccessFlags dst_access_flags, uint32_t base_mip_level, uint32_t mip_levels, uint32_t layer_count)
-{
-	// perform actual image layout transition independent from this image
-	// functionality is needed without changing the state of the class to enable setting a base_mip_map_level
-	vk::ImageMemoryBarrier imb;
-	imb.oldLayout = old_layout;
-	imb.newLayout = new_layout;
-	imb.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	imb.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	imb.image = image;
-	imb.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-	imb.subresourceRange.baseMipLevel = base_mip_level;
-	imb.subresourceRange.levelCount = mip_levels;
-	imb.subresourceRange.baseArrayLayer = 0;
-	imb.subresourceRange.layerCount = layer_count;
-	imb.srcAccessMask = src_access_flags;
-	imb.dstAccessMask = dst_access_flags;
-	src_stage_flags = src_stage_flags;
-	dst_stage_flags = dst_stage_flags;
-	cb.pipelineBarrier(src_stage_flags, dst_stage_flags, {}, nullptr, nullptr, imb);
-}
-
 void copy_buffer_to_image(VulkanCommandContext& vcc, const Buffer& buffer, vk::Extent3D extent, vk::Image image, uint32_t layer_count, uint32_t pixel_byte_size)
 {
 	vk::CommandBuffer& cb = vcc.get_one_time_transfer_buffer();
@@ -155,7 +207,22 @@ void Image::create_image_from_data(const unsigned char* data, VulkanCommandConte
 	auto move_buffer_to_image = [&](vk::Image image, uint32_t mip_levels) -> void {
 		// copy image data to tmp_image
 		vk::CommandBuffer& cb = vcc.get_one_time_transfer_buffer();
-		perform_image_layout_transition(cb, image, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, {}, vk::AccessFlagBits::eTransferWrite, 0, mip_levels, layer_count);
+		perform_image_layout_transition(cb, {
+			.image = image,
+			.range = {
+				.aspect = vk::ImageAspectFlagBits::eColor,
+				.base_mip_level = 0,
+				.level_count = mip_levels,
+				.base_array_layer = 0,
+				.layer_count = layer_count
+			},
+			.old_layout = vk::ImageLayout::eUndefined,
+			.new_layout = vk::ImageLayout::eTransferDstOptimal,
+			.src_stage = vk::PipelineStageFlagBits2::eTransfer,
+			.src_access = vk::AccessFlagBits2::eNone,
+			.dst_stage = vk::PipelineStageFlagBits2::eTransfer,
+			.dst_access = vk::AccessFlagBits2::eTransferWrite
+		});
 		vcc.submit_transfer(cb, true);
 		copy_buffer_to_image(vcc, buffer, vk::Extent3D(w, h, 1), image, layer_count, c);
 	};
@@ -175,9 +242,39 @@ void Image::create_image_from_data(const unsigned char* data, VulkanCommandConte
 
 		// create image with reduced resolution by blitting
 		vk::CommandBuffer& cb = vcc.get_one_time_graphics_buffer();
-		perform_image_layout_transition(cb, tmp_image, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eTransferRead, 0, 1, layer_count);
+		perform_image_layout_transition(cb, {
+			.image = tmp_image,
+			.range = {
+				.aspect = vk::ImageAspectFlagBits::eColor,
+				.base_mip_level = 0,
+				.level_count = 1,
+				.base_array_layer = 0,
+				.layer_count = layer_count
+			},
+			.old_layout = vk::ImageLayout::eTransferDstOptimal,
+			.new_layout = vk::ImageLayout::eTransferSrcOptimal,
+			.src_stage = vk::PipelineStageFlagBits2::eTransfer,
+			.src_access = vk::AccessFlagBits2::eTransferWrite,
+			.dst_stage = vk::PipelineStageFlagBits2::eTransfer,
+			.dst_access = vk::AccessFlagBits2::eTransferRead
+		});
 		std::tie(image, vmaa) = create_image(queues, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc | usage_flags, vk::SampleCountFlagBits::e1, true, format, vk::Extent3D(w, h, 1), layer_count, vmc.va);
-		perform_image_layout_transition(cb, image, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, {}, vk::AccessFlagBits::eTransferWrite, 0, mip_levels, layer_count);
+		perform_image_layout_transition(cb, {
+			.image = image,
+			.range = {
+				.aspect = vk::ImageAspectFlagBits::eColor,
+				.base_mip_level = 0,
+				.level_count = mip_levels,
+				.base_array_layer = 0,
+				.layer_count = layer_count
+			},
+			.old_layout = vk::ImageLayout::eUndefined,
+			.new_layout = vk::ImageLayout::eTransferDstOptimal,
+			.src_stage = vk::PipelineStageFlagBits2::eTransfer,
+			.src_access = vk::AccessFlagBits2::eNone,
+			.dst_stage = vk::PipelineStageFlagBits2::eTransfer,
+			.dst_access = vk::AccessFlagBits2::eTransferWrite
+		});
 		blit_image(cb, tmp_image, 0, tmp_image_offset, image, 0, {w, h, 1}, layer_count);
 		vcc.submit_graphics(cb, true);
 
@@ -194,7 +291,7 @@ void Image::create_image_from_data(const unsigned char* data, VulkanCommandConte
 	layout = vk::ImageLayout::eTransferDstOptimal;
 	if (usage_flags & vk::ImageUsageFlagBits::eSampled)
 	{
-		mip_levels > 1 ? generate_mipmaps(vcc) : transition_image_layout(vcc, vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
+		mip_levels > 1 ? generate_mipmaps(vcc) : transition_image_layout(vcc, vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits2::eTransfer, vk::PipelineStageFlagBits2::eFragmentShader, vk::AccessFlagBits2::eTransferWrite, vk::AccessFlagBits2::eShaderRead);
 	}
 	create_image_view(vk::ImageAspectFlagBits::eColor, image_view_type);
 	create_sampler();
@@ -250,11 +347,26 @@ void Image::destruct()
 	vmaDestroyImage(vmc.va, VkImage(image), vmaa);
 }
 
-void Image::transition_image_layout(VulkanCommandContext& vcc, vk::ImageLayout new_layout, vk::PipelineStageFlags src_stage_flags, vk::PipelineStageFlags dst_stage_flags, vk::AccessFlags src_access_flags, vk::AccessFlags dst_access_flags)
+void Image::transition_image_layout(VulkanCommandContext& vcc, vk::ImageLayout new_layout, vk::PipelineStageFlags2 src_stage_flags, vk::PipelineStageFlags2 dst_stage_flags, vk::AccessFlags2 src_access_flags, vk::AccessFlags2 dst_access_flags)
 {
 	// transition the image layout of this image
 	vk::CommandBuffer& cb = vcc.get_one_time_graphics_buffer();
-	perform_image_layout_transition(cb, image, layout, new_layout, src_stage_flags, dst_stage_flags, src_access_flags, dst_access_flags, 0, mip_levels, layer_count);
+	perform_image_layout_transition(cb, {
+		.image = image,
+		.range = {
+			.aspect = default_aspect_for_format(format),
+			.base_mip_level = 0,
+			.level_count = mip_levels,
+			.base_array_layer = 0,
+			.layer_count = layer_count
+		},
+		.old_layout = layout,
+		.new_layout = new_layout,
+		.src_stage = src_stage_flags,
+		.src_access = src_access_flags,
+		.dst_stage = dst_stage_flags,
+		.dst_access = dst_access_flags
+	});
 	vcc.submit_graphics(cb, true);
 	layout = new_layout;
 }

@@ -3,8 +3,8 @@
 #include <fstream>
 #include <filesystem>
 #include <iostream>
+#include "vkte/image.hpp"
 #include "vkte/vkte_log.hpp"
-#include "vkte/render_pass.hpp"
 #include "vkte/vkte_log.hpp"
 
 namespace vkte
@@ -128,13 +128,11 @@ void Pipeline::construct()
 		pmssci.alphaToCoverageEnable = VK_FALSE;
 		pmssci.alphaToOneEnable = VK_FALSE;
 
-		constexpr bool use_additive_blending = false;
-
-		std::vector<vk::PipelineColorBlendAttachmentState> pcbas(graphics_settings->render_pass->attachment_count);
-		for (uint32_t i = 0; i < graphics_settings->render_pass->attachment_count; ++i)
+		std::vector<vk::PipelineColorBlendAttachmentState> pcbas(graphics_settings->color_formats.size());
+		for (uint32_t i = 0; i < graphics_settings->color_formats.size(); i++)
 		{
 			pcbas[i].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-			if (use_additive_blending)
+			if (graphics_settings->additive_blending)
 			{
 				pcbas[i].blendEnable = VK_TRUE;
 				pcbas[i].srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
@@ -172,7 +170,7 @@ void Pipeline::construct()
 
 		vk::PipelineDepthStencilStateCreateInfo pdssci;
 		pdssci.depthTestEnable = VK_TRUE;
-		if (use_additive_blending) pdssci.depthWriteEnable = VK_FALSE;
+		if (graphics_settings->additive_blending) pdssci.depthWriteEnable = VK_FALSE;
 		else pdssci.depthWriteEnable = VK_TRUE;
 		pdssci.depthCompareOp = vk::CompareOp::eLess;
 		pdssci.depthBoundsTestEnable = VK_FALSE;
@@ -183,8 +181,13 @@ void Pipeline::construct()
 		pdssci.back = vk::StencilOpState{};
 
 		vk::PipelineRenderingCreateInfo prci;
+		prci.colorAttachmentCount = graphics_settings->color_formats.size();
+		prci.pColorAttachmentFormats = graphics_settings->color_formats.data();
+		prci.depthAttachmentFormat = graphics_settings->depth_format;
+		prci.stencilAttachmentFormat = has_stencil(graphics_settings->depth_format) ? graphics_settings->depth_format : vk::Format::eUndefined;
 
 		vk::GraphicsPipelineCreateInfo gpci;
+		gpci.pNext = &prci;
 		gpci.stageCount = shader_stages.size();
 		gpci.pStages = shader_stages.data();
 		gpci.pVertexInputState = &pvisci;
@@ -196,8 +199,6 @@ void Pipeline::construct()
 		gpci.pColorBlendState = &pcbsci;
 		gpci.pDynamicState = &pdsci;
 		gpci.layout = pipeline_layout;
-		gpci.renderPass = graphics_settings->render_pass->get();
-		gpci.subpass = 0;
 		gpci.basePipelineHandle = VK_NULL_HANDLE;
 		gpci.basePipelineIndex = -1;
 

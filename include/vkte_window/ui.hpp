@@ -1,16 +1,19 @@
 #pragma once
 
-#include "vkte/render_pass.hpp"
-#include "vkte/vulkan_main_context.hpp"
-#include "vkte/vulkan_command_context.hpp"
+#include <string>
+#include "vulkan/vulkan.hpp"
 
 namespace vkte
 {
+class Swapchain;
+class VulkanCommandContext;
+class VulkanMainContext;
+
 class UI
 {
 public:
 	explicit UI(const vkte::VulkanMainContext& vmc);
-	void construct(vkte::VulkanCommandContext& vcc, const vkte::RenderPass& render_pass, uint32_t frames);
+	void construct(const vkte::Swapchain& swapchain);
 	void destruct();
 	void new_frame(const std::string& title);
 	void end_frame(vk::CommandBuffer& cb);

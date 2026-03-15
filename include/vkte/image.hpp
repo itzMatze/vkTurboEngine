@@ -5,9 +5,35 @@
 
 namespace vkte
 {
+struct ImageSubresourceRangeDesc
+{
+	vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eColor;
+	uint32_t base_mip_level = 0;
+	uint32_t level_count = 1;
+	uint32_t base_array_layer = 0;
+	uint32_t layer_count = 1;
+};
+
+struct ImageTransitionDesc
+{
+	vk::Image image = VK_NULL_HANDLE;
+	ImageSubresourceRangeDesc range{};
+	vk::ImageLayout old_layout = vk::ImageLayout::eUndefined;
+	vk::ImageLayout new_layout = vk::ImageLayout::eUndefined;
+	vk::PipelineStageFlags2 src_stage = vk::PipelineStageFlagBits2::eNone;
+	vk::AccessFlags2 src_access = vk::AccessFlagBits2::eNone;
+	vk::PipelineStageFlags2 dst_stage = vk::PipelineStageFlagBits2::eNone;
+	vk::AccessFlags2 dst_access = vk::AccessFlagBits2::eNone;
+	int32_t src_queue_family = VK_QUEUE_FAMILY_IGNORED;
+	int32_t dst_queue_family = VK_QUEUE_FAMILY_IGNORED;
+};
+
+bool has_stencil(vk::Format depth_format);
+vk::ImageAspectFlags default_aspect_for_format(vk::Format format);
+void perform_image_layout_transition(vk::CommandBuffer& cb, const ImageTransitionDesc& t);
+void perform_image_layout_transition(vk::CommandBuffer& cb, const std::vector<ImageTransitionDesc>& transitions);
 void blit_image(vk::CommandBuffer& cb, vk::Image& src, uint32_t src_mip_map_lvl, vk::Offset3D src_offset, vk::Image& dst, uint32_t dst_mip_map_lvl, vk::Offset3D dst_offset, uint32_t layer_count);
 void copy_image(vk::CommandBuffer& cb, vk::Image& src, vk::Image& dst, uint32_t width, uint32_t height, uint32_t layer_count);
-void perform_image_layout_transition(vk::CommandBuffer& cb, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::PipelineStageFlags src_stage_flags, vk::PipelineStageFlags dst_stage_flags, vk::AccessFlags src_access_flags, vk::AccessFlags dst_access_flags, uint32_t base_mip_level, uint32_t mip_levels, uint32_t layer_count);
 
 class Image
 {
@@ -20,7 +46,7 @@ public:
 	Image(const VulkanMainContext& vmc, const VulkanCommandContext& vcc, uint32_t width, uint32_t height, vk::ImageUsageFlags usage, vk::Format format, vk::SampleCountFlagBits sample_count, bool use_mip_maps, uint32_t base_mip_map_lvl, Queues queues, bool image_view_required = true, uint32_t layer_count = 1);
 	void create_sampler(vk::Filter filter = vk::Filter::eLinear, vk::SamplerAddressMode sampler_address_mode = vk::SamplerAddressMode::eRepeat, bool enable_anisotropy = true);
 	void destruct();
-	void transition_image_layout(VulkanCommandContext& vcc, vk::ImageLayout new_layout, vk::PipelineStageFlags src_stage_flags, vk::PipelineStageFlags dst_stage_flags, vk::AccessFlags src_access_flags, vk::AccessFlags dst_access_flags);
+	void transition_image_layout(VulkanCommandContext& vcc, vk::ImageLayout new_layout, vk::PipelineStageFlags2 src_stage_flags, vk::PipelineStageFlags2 dst_stage_flags, vk::AccessFlags2 src_access_flags, vk::AccessFlags2 dst_access_flags);
 	VmaAllocation get_allocation() const;
 	VmaAllocationInfo get_allocation_info() const;
 	vk::DeviceSize get_byte_size() const;

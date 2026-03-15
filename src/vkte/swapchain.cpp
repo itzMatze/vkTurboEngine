@@ -6,7 +6,7 @@
 
 namespace vkte
 {
-Swapchain::Swapchain(const VulkanMainContext& vmc, VulkanCommandContext& vcc, Storage& storage) : vmc(vmc), vcc(vcc), storage(storage), render_pass(vmc)
+Swapchain::Swapchain(const VulkanMainContext& vmc, VulkanCommandContext& vcc, Storage& storage) : vmc(vmc), vcc(vcc), storage(storage)
 {}
 
 const vk::SwapchainKHR& Swapchain::get() const
@@ -14,70 +14,69 @@ const vk::SwapchainKHR& Swapchain::get() const
 	return swapchain;
 }
 
-const RenderPass& Swapchain::get_render_pass() const
-{
-	return render_pass;
-}
-
 vk::Extent2D Swapchain::get_extent() const
 {
 	return extent;
 }
 
-vk::Framebuffer Swapchain::get_framebuffer(uint32_t idx) const
+vk::ImageView Swapchain::get_view(uint32_t idx) const
 {
-	return framebuffers[idx];
+	return image_views[idx];
 }
 
-vk::Image Swapchain::get_framebuffer_image(uint32_t idx) const
+vk::Image Swapchain::get_image(uint32_t idx) const
 {
 	return images[idx];
 }
 
-uint32_t Swapchain::get_framebuffer_count() const
+vk::ImageView Swapchain::get_depth_view() const
 {
-	return framebuffers.size();
+	return storage.get_image(depth_buffer).get_view();
+}
+
+vk::Image Swapchain::get_depth_image() const
+{
+	return storage.get_image(depth_buffer).get_image();
+}
+
+vk::Format Swapchain::get_color_format() const
+{
+	return surface_format.format;
+}
+
+vk::Format Swapchain::get_depth_format() const
+{
+	return depth_format;
+}
+
+uint32_t Swapchain::get_image_count() const
+{
+	return images.size();
 }
 
 void Swapchain::construct(bool vsync)
 {
-	construct(vsync, true);
+	extent = choose_extent();
+	surface_format = choose_surface_format();
+	depth_format = choose_depth_format();
+	swapchain = create_swapchain(vsync);
+	depth_buffer = storage.add_image("depth_buffer", extent.width, extent.height, vk::ImageUsageFlagBits::eDepthStencilAttachment, depth_format, vk::SampleCountFlagBits::e1, false, 0, QueueFamilyFlags::Graphics);
+	storage.get_image(depth_buffer).transition_image_layout(vcc, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests, vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eDepthStencilAttachmentRead | vk::AccessFlagBits2::eDepthStencilAttachmentWrite);
+	create_images();
 }
 
 void Swapchain::destruct()
 {
-	destruct(true);
-}
-
-void Swapchain::recreate(bool vsync)
-{
-	destruct(false);
-	construct(vsync, false);
-}
-
-void Swapchain::construct(bool vsync, bool full)
-{
-	extent = choose_extent();
-	surface_format = choose_surface_format();
-	depth_format = choose_depth_format();
-	if (full) render_pass.construct(surface_format.format, depth_format);
-	swapchain = create_swapchain(vsync);
-	depth_buffer = storage.add_image("depth_buffer", extent.width, extent.height, vk::ImageUsageFlagBits::eDepthStencilAttachment, depth_format, vk::SampleCountFlagBits::e1, false, 0, QueueFamilyFlags::Graphics);
-	create_framebuffers();
-}
-
-void Swapchain::destruct(bool full)
-{
-	for (auto& framebuffer : framebuffers) vmc.logical_device.get().destroyFramebuffer(framebuffer);
-	framebuffers.clear();
 	for (auto& image_view : image_views) vmc.logical_device.get().destroyImageView(image_view);
 	image_views.clear();
 	storage.destroy_image(depth_buffer);
 	vmc.logical_device.get().destroySwapchainKHR(swapchain);
-	if (full)
-	{
-		render_pass.destruct();
-	}
+}
+
+void Swapchain::recreate(bool vsync)
+{
+	destruct();
+	construct(vsync);
 }
 
 vk::SwapchainKHR Swapchain::create_swapchain(bool vsync)
@@ -112,7 +111,7 @@ vk::SwapchainKHR Swapchain::create_swapchain(bool vsync)
 	return vmc.logical_device.get().createSwapchainKHR(sci);
 }
 
-void Swapchain::create_framebuffers()
+void Swapchain::create_images()
 {
 	images = vmc.logical_device.get().getSwapchainImagesKHR(swapchain);
 
@@ -132,20 +131,6 @@ void Swapchain::create_framebuffers()
 		ivci.subresourceRange.baseArrayLayer = 0;
 		ivci.subresourceRange.layerCount = 1;
 		image_views.push_back(vmc.logical_device.get().createImageView(ivci));
-	}
-
-	for (const auto& image_view : image_views)
-	{
-		std::vector<vk::ImageView> attachments = {image_view, storage.get_image(depth_buffer).get_view()};
-		vk::FramebufferCreateInfo fbci;
-		fbci.renderPass = render_pass.get();
-		fbci.attachmentCount = attachments.size();
-		fbci.pAttachments = attachments.data();
-		fbci.width = extent.width;
-		fbci.height = extent.height;
-		fbci.layers = 1;
-
-		framebuffers.push_back(vmc.logical_device.get().createFramebuffer(fbci));
 	}
 }
 

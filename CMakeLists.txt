@@ -21,7 +21,6 @@ set(SOURCE_FILES
 	src/vkte/acceleration_structure_builder.cpp
 	src/vkte/pipeline.cpp
 	src/vkte/queue_families.cpp
-	src/vkte/render_pass.cpp
 	src/vkte/shader.cpp
 	src/vkte/storage.cpp
 	src/vkte/synchronization.cpp
