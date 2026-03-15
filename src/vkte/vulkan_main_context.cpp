@@ -153,7 +153,6 @@ void VulkanMainContext::create_vma_allocator()
 void VulkanMainContext::setup_debug_messenger()
 {
 	vk::DebugUtilsMessengerCreateInfoEXT dumci;
-	dumci.sType = vk::StructureType::eDebugUtilsMessengerCreateInfoEXT;
 	dumci.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
 	dumci.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
 	dumci.pfnUserCallback = debug_callback;

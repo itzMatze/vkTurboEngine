@@ -85,8 +85,7 @@ vk::SwapchainKHR Swapchain::create_swapchain(bool vsync)
 	vk::SurfaceCapabilitiesKHR capabilities = vmc.get_surface_capabilities();
 	uint32_t image_count = capabilities.maxImageCount > 0 ? std::min(capabilities.minImageCount + 1, capabilities.maxImageCount) : capabilities.minImageCount + 1;
 
-	vk::SwapchainCreateInfoKHR sci{};
-	sci.sType = vk::StructureType::eSwapchainCreateInfoKHR;
+	vk::SwapchainCreateInfoKHR sci;
 	sci.surface = vmc.surface;
 	sci.minImageCount = image_count;
 	sci.imageFormat = surface_format.format;
@@ -119,8 +118,7 @@ void Swapchain::create_framebuffers()
 
 	for (const auto& image : images)
 	{
-		vk::ImageViewCreateInfo ivci{};
-		ivci.sType = vk::StructureType::eImageViewCreateInfo;
+		vk::ImageViewCreateInfo ivci;
 		ivci.image = image;
 		ivci.viewType = vk::ImageViewType::e2D;
 		ivci.format = surface_format.format;
@@ -139,8 +137,7 @@ void Swapchain::create_framebuffers()
 	for (const auto& image_view : image_views)
 	{
 		std::vector<vk::ImageView> attachments = {image_view, storage.get_image(depth_buffer).get_view()};
-		vk::FramebufferCreateInfo fbci{};
-		fbci.sType = vk::StructureType::eFramebufferCreateInfo;
+		vk::FramebufferCreateInfo fbci;
 		fbci.renderPass = render_pass.get();
 		fbci.attachmentCount = attachments.size();
 		fbci.pAttachments = attachments.data();

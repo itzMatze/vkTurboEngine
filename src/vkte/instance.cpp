@@ -8,11 +8,10 @@ void Instance::construct(std::vector<const char*> required_extensions, std::vect
 {
 	required_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-	vk::ApplicationInfo ai{};
-	ai.sType = vk::StructureType::eApplicationInfo;
+	vk::ApplicationInfo ai;
 	ai.pApplicationName = "Vulkan Engine";
 	ai.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-	ai.pEngineName = "No Engine";
+	ai.pEngineName = "vkTurboEngine";
 	ai.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 	ai.apiVersion = VK_API_VERSION_1_4;
 
@@ -29,8 +28,7 @@ void Instance::construct(std::vector<const char*> required_extensions, std::vect
 	validation_handler.add_extensions(validation_layers);
 	if (!validation_handler.check_extension_availability(avail_layer_names)) VKTE_THROW("vkte: Requested validation layer not found!");
 
-	vk::InstanceCreateInfo ici{};
-	ici.sType = vk::StructureType::eInstanceCreateInfo;
+	vk::InstanceCreateInfo ici;
 	ici.pApplicationInfo = &ai;
 	ici.enabledExtensionCount = extensions_handler.get_size();
 	ici.ppEnabledExtensionNames = extensions_handler.get_extensions().data();

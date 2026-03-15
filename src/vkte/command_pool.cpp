@@ -4,8 +4,7 @@ namespace vkte
 {
 CommandPool::CommandPool(const vk::Device& logical_device, uint32_t queue_family_idx) : device(logical_device)
 {
-	vk::CommandPoolCreateInfo cpci{};
-	cpci.sType = vk::StructureType::eCommandPoolCreateInfo;
+	vk::CommandPoolCreateInfo cpci;
 	cpci.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 	cpci.queueFamilyIndex = queue_family_idx;
 	command_pool = device.createCommandPool(cpci);
@@ -13,8 +12,7 @@ CommandPool::CommandPool(const vk::Device& logical_device, uint32_t queue_family
 
 std::vector<vk::CommandBuffer> CommandPool::create_command_buffers(uint32_t count)
 {
-	vk::CommandBufferAllocateInfo cbai{};
-	cbai.sType = vk::StructureType::eCommandBufferAllocateInfo;
+	vk::CommandBufferAllocateInfo cbai;
 	cbai.commandPool = command_pool;
 	// secondary command buffers can be called from primary command buffers
 	cbai.level = vk::CommandBufferLevel::ePrimary;

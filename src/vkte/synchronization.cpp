@@ -11,15 +11,13 @@ void Synchronization::construct(uint32_t semaphore_count, uint32_t fence_count)
 {
 	for (uint32_t i = 0; i < semaphore_count; ++i)
 	{
-		vk::SemaphoreCreateInfo sci{};
-		sci.sType = vk::StructureType::eSemaphoreCreateInfo;
+		vk::SemaphoreCreateInfo sci;
 		semaphores.push_back(device.createSemaphore(sci));
 	}
 	// all fences are created as signaled, if an unsignaled fence is needed use reset_fence
 	for (uint32_t i = 0; i < fence_count; ++i)
 	{
-		vk::FenceCreateInfo fci{};
-		fci.sType = vk::StructureType::eFenceCreateInfo;
+		vk::FenceCreateInfo fci;
 		fci.flags = vk::FenceCreateFlagBits::eSignaled;
 		fences.push_back(device.createFence(fci));
 	}

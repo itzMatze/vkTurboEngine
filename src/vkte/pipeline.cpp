@@ -49,12 +49,10 @@ bool compile_shader(const vk::Device& device, const Shader& shader, vk::Pipeline
 	file_stream << file.rdbuf();
 	std::string source = file_stream.str();
 
-	vk::ShaderModuleCreateInfo smci{};
-	smci.sType = vk::StructureType::eShaderModuleCreateInfo;
+	vk::ShaderModuleCreateInfo smci;
 	smci.codeSize = source.size();
 	smci.pCode = reinterpret_cast<const uint32_t*>(source.c_str());
 	pssci.module = device.createShaderModule(smci);
-	pssci.sType = vk::StructureType::ePipelineShaderStageCreateInfo;
 	pssci.stage = shader.stage_flag;
 	pssci.pName = "main";
 
@@ -92,30 +90,25 @@ void Pipeline::construct()
 	{
 		std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
 		if (vmc.get_features().device_features.dynamic_polygon_mode) dynamic_states.push_back(vk::DynamicState::ePolygonModeEXT);
-		vk::PipelineDynamicStateCreateInfo pdsci{};
-		pdsci.sType = vk::StructureType::ePipelineDynamicStateCreateInfo;
+		vk::PipelineDynamicStateCreateInfo pdsci;
 		pdsci.dynamicStateCount = dynamic_states.size();
 		pdsci.pDynamicStates = dynamic_states.data();
 
-		vk::PipelineVertexInputStateCreateInfo pvisci{};
-		pvisci.sType = vk::StructureType::ePipelineVertexInputStateCreateInfo;
+		vk::PipelineVertexInputStateCreateInfo pvisci;
 		pvisci.vertexBindingDescriptionCount = graphics_settings->binding_descriptions.size();
 		pvisci.pVertexBindingDescriptions = graphics_settings->binding_descriptions.data();
 		pvisci.vertexAttributeDescriptionCount = graphics_settings->attribute_description.size();
 		pvisci.pVertexAttributeDescriptions = graphics_settings->attribute_description.data();
 
-		vk::PipelineInputAssemblyStateCreateInfo piasci{};
-		piasci.sType = vk::StructureType::ePipelineInputAssemblyStateCreateInfo;
+		vk::PipelineInputAssemblyStateCreateInfo piasci;
 		piasci.topology = graphics_settings->primitive_topology;
 		piasci.primitiveRestartEnable = VK_FALSE;
 
-		vk::PipelineViewportStateCreateInfo pvsci{};
-		pvsci.sType = vk::StructureType::ePipelineViewportStateCreateInfo;
+		vk::PipelineViewportStateCreateInfo pvsci;
 		pvsci.viewportCount = 1;
 		pvsci.scissorCount = 1;
 
-		vk::PipelineRasterizationStateCreateInfo prsci{};
-		prsci.sType = vk::StructureType::ePipelineRasterizationStateCreateInfo;
+		vk::PipelineRasterizationStateCreateInfo prsci;
 		prsci.depthClampEnable = VK_FALSE;
 		prsci.rasterizerDiscardEnable = VK_FALSE;
 		prsci.polygonMode = graphics_settings->polygon_mode;
@@ -127,8 +120,7 @@ void Pipeline::construct()
 		prsci.depthBiasClamp = 0.0f;
 		prsci.depthBiasSlopeFactor = 0.0f;
 
-		vk::PipelineMultisampleStateCreateInfo pmssci{};
-		pmssci.sType = vk::StructureType::ePipelineMultisampleStateCreateInfo;
+		vk::PipelineMultisampleStateCreateInfo pmssci;
 		pmssci.sampleShadingEnable = VK_TRUE;
 		pmssci.rasterizationSamples = vk::SampleCountFlagBits::e1;
 		pmssci.minSampleShading = 0.4f;
@@ -160,8 +152,7 @@ void Pipeline::construct()
 			pcbas[i].alphaBlendOp = vk::BlendOp::eAdd;
 		}
 
-		vk::PipelineColorBlendStateCreateInfo pcbsci{};
-		pcbsci.sType = vk::StructureType::ePipelineColorBlendStateCreateInfo;
+		vk::PipelineColorBlendStateCreateInfo pcbsci;
 		pcbsci.logicOpEnable = VK_FALSE;
 		pcbsci.logicOp = vk::LogicOp::eCopy;
 		pcbsci.attachmentCount = pcbas.size();
@@ -171,8 +162,7 @@ void Pipeline::construct()
 		pcbsci.blendConstants[2] = 0.0f;
 		pcbsci.blendConstants[3] = 0.0f;
 
-		vk::PipelineLayoutCreateInfo plci{};
-		plci.sType = vk::StructureType::ePipelineLayoutCreateInfo;
+		vk::PipelineLayoutCreateInfo plci;
 		plci.setLayoutCount = 1;
 		plci.pSetLayouts = graphics_settings->set_layout;
 		plci.pushConstantRangeCount = graphics_settings->pcrs.size();
@@ -180,8 +170,7 @@ void Pipeline::construct()
 
 		pipeline_layout = vmc.logical_device.get().createPipelineLayout(plci);
 
-		vk::PipelineDepthStencilStateCreateInfo pdssci{};
-		pdssci.sType = vk::StructureType::ePipelineDepthStencilStateCreateInfo;
+		vk::PipelineDepthStencilStateCreateInfo pdssci;
 		pdssci.depthTestEnable = VK_TRUE;
 		if (use_additive_blending) pdssci.depthWriteEnable = VK_FALSE;
 		else pdssci.depthWriteEnable = VK_TRUE;
@@ -193,8 +182,9 @@ void Pipeline::construct()
 		pdssci.front = vk::StencilOpState{};
 		pdssci.back = vk::StencilOpState{};
 
-		vk::GraphicsPipelineCreateInfo gpci{};
-		gpci.sType = vk::StructureType::eGraphicsPipelineCreateInfo;
+		vk::PipelineRenderingCreateInfo prci;
+
+		vk::GraphicsPipelineCreateInfo gpci;
 		gpci.stageCount = shader_stages.size();
 		gpci.pStages = shader_stages.data();
 		gpci.pVertexInputState = &pvisci;
@@ -222,8 +212,7 @@ void Pipeline::construct()
 		pcr.size = compute_settings->push_constant_byte_size;
 		pcr.stageFlags = vk::ShaderStageFlagBits::eCompute;
 
-		vk::PipelineLayoutCreateInfo plci{};
-		plci.sType = vk::StructureType::ePipelineLayoutCreateInfo;
+		vk::PipelineLayoutCreateInfo plci;
 		plci.setLayoutCount = 1;
 		plci.pSetLayouts = compute_settings->set_layout;
 		if (compute_settings->push_constant_byte_size > 0)
@@ -234,8 +223,7 @@ void Pipeline::construct()
 
 		pipeline_layout = vmc.logical_device.get().createPipelineLayout(plci);
 
-		vk::ComputePipelineCreateInfo cpci{};
-		cpci.sType = vk::StructureType::eComputePipelineCreateInfo;
+		vk::ComputePipelineCreateInfo cpci;
 		cpci.stage = shader_stages[0];
 		cpci.layout = pipeline_layout;
 

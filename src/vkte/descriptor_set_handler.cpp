@@ -66,13 +66,11 @@ void DescriptorSetHandler::construct()
 	for (uint32_t i = 0; i < set_count; ++i)
 	{
 		std::vector<vk::DescriptorBindingFlags> binding_flags(layout_bindings.size(), vk::DescriptorBindingFlagBits::ePartiallyBound);
-		vk::DescriptorSetLayoutBindingFlagsCreateInfo dslbfci{};
-		dslbfci.sType = vk::StructureType::eDescriptorSetLayoutBindingFlagsCreateInfo;
+		vk::DescriptorSetLayoutBindingFlagsCreateInfo dslbfci;
 		dslbfci.bindingCount = layout_bindings.size();
 		dslbfci.pBindingFlags = binding_flags.data();
 
-		vk::DescriptorSetLayoutCreateInfo dslci{};
-		dslci.sType = vk::StructureType::eDescriptorSetLayoutCreateInfo;
+		vk::DescriptorSetLayoutCreateInfo dslci;
 		dslci.bindingCount = layout_bindings.size();
 		dslci.pBindings = layout_bindings.data();
 		dslci.pNext = &dslbfci;
@@ -88,16 +86,14 @@ void DescriptorSetHandler::construct()
 		if (dps.descriptorCount > 0) pool_sizes.push_back(dps);
 	}
 
-	vk::DescriptorPoolCreateInfo dpci{};
-	dpci.sType = vk::StructureType::eDescriptorPoolCreateInfo;
+	vk::DescriptorPoolCreateInfo dpci;
 	dpci.poolSizeCount = pool_sizes.size();
 	dpci.pPoolSizes = pool_sizes.data();
 	dpci.maxSets = set_count;
 
 	pool = vmc.logical_device.get().createDescriptorPool(dpci);
 
-	vk::DescriptorSetAllocateInfo dsai{};
-	dsai.sType = vk::StructureType::eDescriptorSetAllocateInfo;
+	vk::DescriptorSetAllocateInfo dsai;
 	dsai.descriptorPool = pool;
 	dsai.descriptorSetCount = layouts.size();
 	dsai.pSetLayouts = layouts.data();
@@ -109,9 +105,8 @@ void DescriptorSetHandler::construct()
 	{
 		for (uint32_t j = 0; j < descriptors.size(); ++j)
 		{
-			vk::WriteDescriptorSet wds{};
+			vk::WriteDescriptorSet wds;
 			wds.pNext = descriptors[j].pNext[i];
-			wds.sType = vk::StructureType::eWriteDescriptorSet;
 			wds.dstSet = sets[i];
 			wds.dstBinding = descriptors[j].dslb.binding;
 			wds.dstArrayElement = 0;

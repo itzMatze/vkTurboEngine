@@ -52,10 +52,9 @@ uint32_t AccelerationStructureBuilder::add_blas(vk::CommandBuffer& cb, QueueFami
 		asbris.push_back(asbri);
 		num_triangles.push_back(asbri.primitiveCount);
 
-		vk::AccelerationStructureGeometryKHR asg{};
+		vk::AccelerationStructureGeometryKHR asg;
 		asg.flags = vk::GeometryFlagBitsKHR::eOpaque;
 		asg.geometryType = vk::GeometryTypeKHR::eTriangles;
-		asg.geometry.triangles.sType = vk::StructureType::eAccelerationStructureGeometryTrianglesDataKHR;
 		asg.geometry.triangles.vertexFormat = vk::Format::eR32G32B32Sfloat;
 		asg.geometry.triangles.vertexData = vertex_buffer_device_adress;
 		asg.geometry.triangles.maxVertex = vertex_buffer.get_element_count();
@@ -80,15 +79,13 @@ uint32_t AccelerationStructureBuilder::add_blas(vk::CommandBuffer& cb, QueueFami
 	vk::AccelerationStructureBuildSizesInfoKHR asbsi = vmc.logical_device.get().getAccelerationStructureBuildSizesKHR(vk::AccelerationStructureBuildTypeKHR::eDevice, asbgi, num_triangles);
 	blas.buffer = storage.add_buffer(buffer_name, asbsi.accelerationStructureSize, vk::BufferUsageFlagBits::eShaderDeviceAddress | vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR, true, QueueFamilyFlags::Compute | QueueFamilyFlags::Graphics | QueueFamilyFlags::Transfer);
 
-	vk::AccelerationStructureCreateInfoKHR asci{};
-	asci.sType = vk::StructureType::eAccelerationStructureCreateInfoKHR;
+	vk::AccelerationStructureCreateInfoKHR asci;
 	asci.buffer = storage.get_buffer(blas.buffer).get();
 	asci.size = asbsi.accelerationStructureSize;
 	asci.type = vk::AccelerationStructureTypeKHR::eBottomLevel;
 	blas.handle = vmc.logical_device.get().createAccelerationStructureKHR(asci);
 
-	vk::AccelerationStructureDeviceAddressInfoKHR asdai{};
-	asdai.sType = vk::StructureType::eAccelerationStructureDeviceAddressInfoKHR;
+	vk::AccelerationStructureDeviceAddressInfoKHR asdai;
 	asdai.accelerationStructure = blas.handle;
 
 	blas.device_address = vmc.logical_device.get().getAccelerationStructureAddressKHR(&asdai);
@@ -135,7 +132,6 @@ void AccelerationStructureBuilder::construct(vk::CommandBuffer& cb, const std::s
 	vk::AccelerationStructureGeometryKHR asg;
 	asg.geometryType = vk::GeometryTypeKHR::eInstances;
 	asg.flags = vk::GeometryFlagBitsKHR::eOpaque;
-	asg.geometry.instances.sType = vk::StructureType::eAccelerationStructureGeometryInstancesDataKHR;
 	asg.geometry.instances.arrayOfPointers = VK_FALSE;
 	asg.geometry.instances.data = instance_data_device_address;
 
@@ -152,15 +148,13 @@ void AccelerationStructureBuilder::construct(vk::CommandBuffer& cb, const std::s
 
 	top_level_as.buffer = storage.add_buffer(buffer_name, asbsi.accelerationStructureSize, vk::BufferUsageFlagBits::eShaderDeviceAddress | vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR, true, QueueFamilyFlags::Compute | QueueFamilyFlags::Graphics | QueueFamilyFlags::Transfer);
 
-	vk::AccelerationStructureCreateInfoKHR asci{};
-	asci.sType = vk::StructureType::eAccelerationStructureCreateInfoKHR;
+	vk::AccelerationStructureCreateInfoKHR asci;
 	asci.buffer = storage.get_buffer(top_level_as.buffer).get();
 	asci.size = asbsi.accelerationStructureSize;
 	asci.type = vk::AccelerationStructureTypeKHR::eTopLevel;
 	top_level_as.handle = vmc.logical_device.get().createAccelerationStructureKHR(asci);
 
-	vk::AccelerationStructureDeviceAddressInfoKHR asdai{};
-	asdai.sType = vk::StructureType::eAccelerationStructureDeviceAddressInfoKHR;
+	vk::AccelerationStructureDeviceAddressInfoKHR asdai;
 	asdai.accelerationStructure = top_level_as.handle;
 	top_level_as.device_address = vmc.logical_device.get().getAccelerationStructureAddressKHR(&asdai);
 

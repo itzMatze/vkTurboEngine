@@ -64,8 +64,7 @@ std::pair<vk::Image, VmaAllocation> Image::create_image(Queues queues, vk::Image
 	std::vector<uint32_t> queue_family_indices = vmc.queue_families.get(queues);
 	uint32_t mip_levels = use_mip_levels ? std::floor(std::log2(std::max(extent.width, extent.height))) + 1 : 1;
 	if (mip_levels > 1) usage |= vk::ImageUsageFlagBits::eTransferSrc;
-	vk::ImageCreateInfo ici{};
-	ici.sType = vk::StructureType::eImageCreateInfo;
+	vk::ImageCreateInfo ici;
 	ici.imageType = vk::ImageType::e2D;
 	ici.extent = extent;
 	ici.extent.depth = 1;
@@ -101,8 +100,7 @@ void perform_image_layout_transition(vk::CommandBuffer& cb, vk::Image image, vk:
 {
 	// perform actual image layout transition independent from this image
 	// functionality is needed without changing the state of the class to enable setting a base_mip_map_level
-	vk::ImageMemoryBarrier imb{};
-	imb.sType = vk::StructureType::eImageMemoryBarrier;
+	vk::ImageMemoryBarrier imb;
 	imb.oldLayout = old_layout;
 	imb.newLayout = new_layout;
 	imb.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -204,8 +202,7 @@ void Image::create_image_from_data(const unsigned char* data, VulkanCommandConte
 
 void Image::create_image_view(vk::ImageAspectFlags aspects, vk::ImageViewType image_view_type)
 {
-	vk::ImageViewCreateInfo ivci{};
-	ivci.sType = vk::StructureType::eImageViewCreateInfo;
+	vk::ImageViewCreateInfo ivci;
 	ivci.image = image;
 	ivci.viewType = layer_count > 1 ? vk::ImageViewType::e2DArray : image_view_type;
 	ivci.format = format;
@@ -219,8 +216,7 @@ void Image::create_image_view(vk::ImageAspectFlags aspects, vk::ImageViewType im
 
 void Image::create_sampler(vk::Filter filter, vk::SamplerAddressMode sampler_address_mode, bool enable_anisotropy)
 {
-	vk::SamplerCreateInfo sci{};
-	sci.sType = vk::StructureType::eSamplerCreateInfo;
+	vk::SamplerCreateInfo sci;
 	sci.magFilter = filter;
 	sci.minFilter = filter;
 	sci.addressModeU = sampler_address_mode;
@@ -308,8 +304,7 @@ vk::Sampler Image::get_sampler() const
 void Image::generate_mipmaps(VulkanCommandContext& vcc)
 {
 	vk::CommandBuffer& cb = vcc.get_one_time_graphics_buffer();
-	vk::ImageMemoryBarrier imb{};
-	imb.sType = vk::StructureType::eImageMemoryBarrier;
+	vk::ImageMemoryBarrier imb;
 	imb.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	imb.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	imb.image = image;

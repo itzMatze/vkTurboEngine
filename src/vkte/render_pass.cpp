@@ -53,8 +53,7 @@ void RenderPass::construct(const vk::Format& color_format, const vk::Format& dep
 	dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
 
 	std::vector<vk::AttachmentDescription> attachments{color_ad, depth_ad};
-	vk::RenderPassCreateInfo rpci{};
-	rpci.sType = vk::StructureType::eRenderPassCreateInfo;
+	vk::RenderPassCreateInfo rpci;
 	rpci.attachmentCount = attachments.size();
 	rpci.pAttachments = attachments.data();
 	rpci.subpassCount = 1;

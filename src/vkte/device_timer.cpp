@@ -8,8 +8,7 @@ DeviceTimer::DeviceTimer(const VulkanMainContext& vmc) : vmc(vmc)
 void DeviceTimer::construct(uint32_t timer_count)
 {
 	result_fetched.resize(timer_count, true);
-	vk::QueryPoolCreateInfo qpci{};
-	qpci.sType = vk::StructureType::eQueryPoolCreateInfo;
+	vk::QueryPoolCreateInfo qpci;
 	qpci.queryType = vk::QueryType::eTimestamp;
 	qpci.queryCount = timer_count * 2;
 	qp = vmc.logical_device.get().createQueryPool(qpci);

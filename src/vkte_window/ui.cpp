@@ -25,8 +25,7 @@ void UI::construct(vkte::VulkanCommandContext& vcc, const vkte::RenderPass& rend
 		{ vk::DescriptorType::eInputAttachment, 1000 }
 	};
 
-	vk::DescriptorPoolCreateInfo dpci{};
-	dpci.sType = vk::StructureType::eDescriptorPoolCreateInfo;
+	vk::DescriptorPoolCreateInfo dpci;
 	dpci.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
 	dpci.maxSets = 1000;
 	dpci.poolSizeCount = pool_sizes.size();

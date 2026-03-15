@@ -203,8 +203,7 @@ public:
 
 	vk::DeviceAddress get_device_address()
 	{
-		vk::BufferDeviceAddressInfoKHR buffer_device_adress_i{};
-		buffer_device_adress_i.sType = vk::StructureType::eBufferDeviceAddressInfo;
+		vk::BufferDeviceAddressInfoKHR buffer_device_adress_i;
 		buffer_device_adress_i.buffer = buffer;
 		return vmc.logical_device.get().getBufferAddress(buffer_device_adress_i);
 	}
@@ -222,8 +221,7 @@ private:
 	std::pair<vk::Buffer, VmaAllocation> create_buffer(vk::BufferUsageFlags usage_flags, VmaAllocationCreateFlags vma_flags, bool device_local, Queues queues)
 	{
 		std::vector<uint32_t> queue_indices = vmc.queue_families.get(queues);
-		vk::BufferCreateInfo bci{};
-		bci.sType = vk::StructureType::eBufferCreateInfo;
+		vk::BufferCreateInfo bci;
 		bci.size = byte_size;
 		bci.usage = usage_flags;
 		bci.sharingMode = queue_indices.size() == 1 ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent;

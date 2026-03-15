@@ -47,8 +47,7 @@ vk::CommandBuffer& VulkanCommandContext::get_one_time_transfer_buffer() { return
 
 vk::CommandBuffer& VulkanCommandContext::begin(vk::CommandBuffer& cb)
 {
-	vk::CommandBufferBeginInfo cbbi{};
-	cbbi.sType = vk::StructureType::eCommandBufferBeginInfo;
+	vk::CommandBufferBeginInfo cbbi;
 	cbbi.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	cb.begin(cbbi);
 	return cb;
@@ -72,8 +71,7 @@ void VulkanCommandContext::submit_transfer(const vk::CommandBuffer& cb, bool wai
 void VulkanCommandContext::submit(const vk::CommandBuffer& cb, const vk::Queue& queue, bool wait_idle) const
 {
 	cb.end();
-	vk::SubmitInfo submit_info{};
-	submit_info.sType = vk::StructureType::eSubmitInfo;
+	vk::SubmitInfo submit_info;
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &cb;
 	queue.submit(submit_info);
