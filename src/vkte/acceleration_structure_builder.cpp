@@ -44,7 +44,7 @@ uint32_t AccelerationStructureBuilder::add_blas(vk::CommandBuffer& cb, QueueFami
 	std::vector<vk::AccelerationStructureGeometryKHR> asgs;
 	for (uint32_t i = 0; i < index_offsets.size(); ++i)
 	{
-		vk::AccelerationStructureBuildRangeInfoKHR asbri{};
+		vk::AccelerationStructureBuildRangeInfoKHR asbri;
 		asbri.primitiveCount = index_counts.empty() ? index_buffer.get_element_count() / 3 : index_counts[i] / 3;
 		asbri.primitiveOffset = sizeof(uint32_t) * index_offsets[i];
 		asbri.firstVertex = 0;
@@ -68,7 +68,7 @@ uint32_t AccelerationStructureBuilder::add_blas(vk::CommandBuffer& cb, QueueFami
 	std::vector<vk::AccelerationStructureBuildRangeInfoKHR*> pasbris;
 	pasbris.push_back(asbris.data());
 
-	vk::AccelerationStructureBuildGeometryInfoKHR asbgi{};
+	vk::AccelerationStructureBuildGeometryInfoKHR asbgi;
 	asbgi.type = vk::AccelerationStructureTypeKHR::eBottomLevel;
 	asbgi.flags = vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace;
 	asbgi.mode = vk::BuildAccelerationStructureModeKHR::eBuild;
@@ -94,7 +94,7 @@ uint32_t AccelerationStructureBuilder::add_blas(vk::CommandBuffer& cb, QueueFami
 
 	asbgi.dstAccelerationStructure = blas.handle;
 	asbgi.scratchData.deviceAddress = storage.get_buffer(blas.scratch_buffer).get_device_address();
-	std::vector<vk::AccelerationStructureBuildGeometryInfoKHR> asbgis{};
+	std::vector<vk::AccelerationStructureBuildGeometryInfoKHR> asbgis;
 	asbgis.push_back(asbgi);
 
 	cb.buildAccelerationStructuresKHR(asbgis, pasbris);
@@ -132,6 +132,7 @@ void AccelerationStructureBuilder::construct(vk::CommandBuffer& cb, const std::s
 	vk::AccelerationStructureGeometryKHR asg;
 	asg.geometryType = vk::GeometryTypeKHR::eInstances;
 	asg.flags = vk::GeometryFlagBitsKHR::eOpaque;
+	asg.geometry.instances.sType = vk::StructureType::eAccelerationStructureGeometryInstancesDataKHR;
 	asg.geometry.instances.arrayOfPointers = VK_FALSE;
 	asg.geometry.instances.data = instance_data_device_address;
 
@@ -167,7 +168,7 @@ void AccelerationStructureBuilder::construct(vk::CommandBuffer& cb, const std::s
 	asbgi.dstAccelerationStructure = top_level_as.handle;
 	asbgi.scratchData.deviceAddress = storage.get_buffer(top_level_as.scratch_buffer).get_device_address();
 
-	vk::AccelerationStructureBuildRangeInfoKHR asbri{};
+	vk::AccelerationStructureBuildRangeInfoKHR asbri;
 	asbri.primitiveCount = instances.size();
 	asbri.primitiveOffset = 0;
 	asbri.firstVertex = 0;

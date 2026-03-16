@@ -46,6 +46,12 @@ void VulkanMainContext::construct(const std::string& title, const uint32_t width
 	surface = window.create_surface(instance.get());
 	std::vector<const char*> device_extensions;
 	if (features.swapchain) device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	if (features.device_features.acceleration_structure)
+	{
+		device_extensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+		device_extensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+	}
+	if (features.device_features.ray_query) device_extensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
 	if (features.device_features.dynamic_polygon_mode) device_extensions.push_back(VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME);
 	physical_device.construct(instance, device_extensions, surface);
 	queue_families.construct(physical_device.get(), surface);
@@ -68,6 +74,12 @@ void VulkanMainContext::construct(const Features& features)
 	VULKAN_HPP_DEFAULT_DISPATCHER.init(instance.get());
 	std::vector<const char*> device_extensions;
 	if (features.swapchain) device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	if (features.device_features.acceleration_structure)
+	{
+		device_extensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+		device_extensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+	}
+	if (features.device_features.ray_query) device_extensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
 	if (features.device_features.dynamic_polygon_mode) device_extensions.push_back(VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME);
 	physical_device.construct(instance, device_extensions, std::nullopt);
 	queue_families.construct(physical_device.get(), {});
