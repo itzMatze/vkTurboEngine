@@ -4,7 +4,7 @@
 
 namespace vkte
 {
-Shader::Shader(const std::string& name, vk::ShaderStageFlagBits stage_flag) : name(name), stage_flag(stage_flag)
+Shader::Shader(const std::string& name, Language lang, vk::ShaderStageFlagBits stage_flag) : name(name), lang(lang), stage_flag(stage_flag)
 {}
 
 const std::vector<uint32_t>& Shader::get_spec_entries_data() const

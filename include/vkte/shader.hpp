@@ -5,12 +5,18 @@
 
 namespace vkte
 {
+enum class Language
+{
+	Glsl,
+	Slang
+};
 class Shader
 {
 public:
 	Shader() = default;
-	Shader(const std::string& name, vk::ShaderStageFlagBits stage_flag);
+	Shader(const std::string& name, Language lang, vk::ShaderStageFlagBits stage_flag);
 	std::string name;
+	Language lang;
 	vk::ShaderStageFlagBits stage_flag;
 
 	template<typename T>

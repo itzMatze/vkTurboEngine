@@ -29,8 +29,12 @@ void LogicalDevice::construct(const PhysicalDevice& p_device, const Features& fe
 	as_features.pNext = &rq_features;
 	as_features.accelerationStructure = features.acceleration_structure ? VK_TRUE : VK_FALSE;
 
+	vk::PhysicalDeviceVulkan11Features device_features_11;
+	device_features_11.pNext = &as_features;
+	device_features_11.shaderDrawParameters = VK_TRUE;
+
 	vk::PhysicalDeviceVulkan12Features device_features_12;
-	device_features_12.pNext = &as_features;
+	device_features_12.pNext = &device_features_11;
 	device_features_12.bufferDeviceAddress = VK_TRUE;
 	device_features_12.scalarBlockLayout = VK_TRUE;
 	device_features_12.descriptorBindingPartiallyBound = VK_TRUE;

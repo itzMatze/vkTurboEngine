@@ -27,6 +27,34 @@ Pipeline::ComputeSettings& Pipeline::get_compute_settings()
 	return *compute_settings;
 }
 
+std::string get_slang_stage(vk::ShaderStageFlagBits stage_flag)
+{
+	if (stage_flag & vk::ShaderStageFlagBits::eVertex) return "vertex";
+	if (stage_flag & vk::ShaderStageFlagBits::eTessellationControl) return "tesscontrol";
+	if (stage_flag & vk::ShaderStageFlagBits::eTessellationEvaluation) return "tesseval";
+	if (stage_flag & vk::ShaderStageFlagBits::eGeometry) return "geometry";
+	if (stage_flag & vk::ShaderStageFlagBits::eFragment) return "fragment";
+	if (stage_flag & vk::ShaderStageFlagBits::eCompute) return "compute";
+	// Ray tracing stages
+	if (stage_flag & vk::ShaderStageFlagBits::eRaygenKHR) return "raygeneration";
+	if (stage_flag & vk::ShaderStageFlagBits::eIntersectionKHR) return "intersection";
+	if (stage_flag & vk::ShaderStageFlagBits::eAnyHitKHR) return "anyhit";
+	if (stage_flag & vk::ShaderStageFlagBits::eClosestHitKHR) return "closesthit";
+	if (stage_flag & vk::ShaderStageFlagBits::eMissKHR) return "miss";
+	if (stage_flag & vk::ShaderStageFlagBits::eCallableKHR) return "callable";
+	// Mesh shading stages (EXT/NV aliases)
+#ifdef VK_EXT_mesh_shader
+	if (stage_flag & vk::ShaderStageFlagBits::eTaskEXT) return "task";
+	if (stage_flag & vk::ShaderStageFlagBits::eMeshEXT) return "mesh";
+#endif
+#ifdef VK_NV_mesh_shader
+	if (stage_flag & vk::ShaderStageFlagBits::eTaskNV) return "task";
+	if (stage_flag & vk::ShaderStageFlagBits::eMeshNV) return "mesh";
+#endif
+	VKTE_ASSERT(false, "vkte: Unsupported slang shader stage flag");
+	return "";
+}
+
 bool compile_shader(const vk::Device& device, const Shader& shader, vk::PipelineShaderStageCreateInfo& pssci, vk::SpecializationInfo& spec_info)
 {
 	std::filesystem::path shader_dir("shader/");
@@ -36,12 +64,25 @@ bool compile_shader(const vk::Device& device, const Shader& shader, vk::Pipeline
 	std::filesystem::path shader_bin_file(shader_bin_dir / (shader.name + ".spv"));
 	VKTE_ASSERT(std::filesystem::exists(shader_file), "vkte: Failed to find shader file \"" + shader.name + "\"");
 	if (std::filesystem::exists(shader_bin_file)) std::filesystem::remove(shader_bin_file);
-	const std::string glslc_args = std::format("--target-env=vulkan1.4 -O -o {0} {1}", shader_bin_file.string(), shader_file.string());
+	std::string command;
+	std::string args;
+	if (shader.lang == Language::Glsl)
+	{
+		command = "glslc";
+		args = std::format("--target-env=vulkan1.4 -O -o {0} {1}", shader_bin_file.string(), shader_file.string());
+	}
+	else if (shader.lang == Language::Slang)
+	{
+		command = "slangc";
+		std::string stage = get_slang_stage(shader.stage_flag);
+		// enable all capabilities to prevent any warnings about implicit upgrades
+		args = std::format("-target spirv -emit-spirv-directly -profile spirv_1_5+all -fvk-use-scalar-layout -matrix-layout-column-major -entry main -stage {2} -o {0} {1}", shader_bin_file.string(), shader_file.string(), stage);
+	}
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-	system(("glslc.exe " + glslc_args).c_str());
+	command += ".exe";
 #elif __linux__
-	system(("glslc " + glslc_args).c_str());
 #endif
+	system((command + " " + args).c_str());
 	if (!std::filesystem::exists(shader_bin_file)) return false;
 	std::ifstream file(shader_bin_file.string(), std::ios::binary);
 	VKTE_ASSERT(file.is_open(), "vkte: Failed to open shader file \"" + shader.name + "\"");
