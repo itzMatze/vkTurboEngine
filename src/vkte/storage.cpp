@@ -104,13 +104,13 @@ void Storage::clear()
 
 Buffer& Storage::get_buffer(uint32_t idx)
 {
-	if (!buffers.at(idx).buffer.has_value()) VKTE_THROW("vkte:Trying to get already destroyed buffer!");
+	if (!buffers.at(idx).buffer.has_value()) VKTE_THROW("vkte: Trying to get already destroyed buffer!");
 	return buffers.at(idx).buffer.value();
 }
 
 Image& Storage::get_image(uint32_t idx)
 {
-	if (!images.at(idx).image.has_value()) VKTE_THROW("vkte:Trying to get already destroyed image!");
+	if (!images.at(idx).image.has_value()) VKTE_THROW("vkte: Trying to get already destroyed image!");
 	return images.at(idx).image.value();
 }
 
