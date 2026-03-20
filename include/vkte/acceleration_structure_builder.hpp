@@ -6,32 +6,63 @@
 
 namespace vkte
 {
-struct AccelerationStructure {
-	vk::AccelerationStructureKHR handle;
-	uint64_t device_address = 0;
-	int32_t buffer = -1;
-	int32_t scratch_buffer = -1;
-};
-
 class AccelerationStructureBuilder
 {
 public:
 	AccelerationStructureBuilder(const VulkanMainContext& vmc, Storage& storage);
 	void destruct();
-	void clean_up_scratch_buffers();
-	// take id of the vertex and index buffer as returned by the storage class
-	uint32_t add_blas(vk::CommandBuffer& cb, QueueFamilyFlags build_queue, const std::string& buffer_name, uint32_t vertex_buffer_id, uint32_t index_buffer_id, vk::DeviceSize vertex_stride, const std::vector<uint32_t>& index_offsets = {0}, const std::vector<uint32_t>& index_counts = {});
+	void clean_up_scratch_buffers(bool keep_dynamic);
+	struct BLASData
+	{
+		// id to the buffer in the storage class
+		uint32_t vertex_buffer_id;
+		uint32_t index_buffer_id;
+		vk::DeviceSize vertex_stride;
+		std::vector<uint32_t> index_offsets = {0};
+		std::vector<uint32_t> index_counts = {};
+		bool dynamic = false;
+	};
+	uint32_t add_blas(const std::string& buffer_name, const BLASData& blas_data);
+	void update_blas(uint32_t blas_idx);
 	uint32_t add_instance(uint32_t blas_idx, const vk::TransformMatrixKHR& M, uint32_t custom_index);
 	void update_instance(uint32_t instance_idx, const vk::TransformMatrixKHR& M);
-	void construct(vk::CommandBuffer& cb, const std::string& buffer_name);
+	void construct(vk::CommandBuffer& cb, QueueFamilyFlags build_queue, const std::string& buffer_name);
+	void update_tlas(vk::CommandBuffer& cb, QueueFamilyFlags build_queue);
 
 private:
+	struct BLAS {
+		std::vector<uint32_t> num_triangles;
+		std::vector<vk::AccelerationStructureBuildRangeInfoKHR> asbris;
+		std::vector<vk::AccelerationStructureGeometryKHR> asgs;
+		vk::AccelerationStructureBuildGeometryInfoKHR asbgi;
+		vk::AccelerationStructureCreateInfoKHR asci;
+		vk::AccelerationStructureKHR handle;
+		uint64_t device_address = 0;
+		int32_t buffer = -1;
+		int32_t scratch_buffer = -1;
+		bool dynamic = false;
+	};
+
+	struct TLAS {
+		vk::AccelerationStructureGeometryKHR asg;
+		vk::AccelerationStructureBuildGeometryInfoKHR asbgi;
+		uint32_t primitive_count;
+		vk::AccelerationStructureCreateInfoKHR asci;
+		vk::AccelerationStructureBuildRangeInfoKHR asbri;
+		vk::AccelerationStructureKHR handle;
+		uint64_t device_address = 0;
+		int32_t buffer = -1;
+		int32_t scratch_buffer = -1;
+	};
+
 	const VulkanMainContext& vmc;
 	Storage& storage;
 	vk::WriteDescriptorSetAccelerationStructureKHR wdsas;
-	std::vector<AccelerationStructure> bottom_level_as;
+	std::vector<BLAS> bottom_level_as;
+	std::vector<uint32_t> blas_update_indices;
+	std::vector<vk::BufferMemoryBarrier> blas_memory_barriers;
 	std::vector<vk::AccelerationStructureInstanceKHR> instances;
 	int32_t instances_buffer = -1;
-	AccelerationStructure top_level_as;
+	TLAS top_level_as;
 };
 } // namespace vkte

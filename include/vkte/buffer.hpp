@@ -28,11 +28,11 @@ public:
 	{
 		if (device_local)
 		{
-			std::tie(buffer, vmaa) = create_buffer((usage_flags | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eTransferSrc), {}, device_local, queues);
+			std::tie(buffer, vmaa) = create_buffer((usage_flags | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eTransferSrc), {}, byte_size, device_local, queues);
 		}
 		else
 		{
-			std::tie(buffer, vmaa) = create_buffer(usage_flags, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, device_local, queues);
+			std::tie(buffer, vmaa) = create_buffer(usage_flags, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, byte_size, device_local, queues);
 		}
 	}
 
@@ -62,7 +62,7 @@ public:
 
 		if (device_local)
 		{
-			auto [staging_buffer, staging_vmaa] = create_buffer((vk::BufferUsageFlagBits::eTransferSrc), VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, true, QueueFamilyFlags::Transfer);
+			auto [staging_buffer, staging_vmaa] = create_buffer((vk::BufferUsageFlagBits::eTransferSrc), VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, byte_count, true, QueueFamilyFlags::Transfer);
 			void* mapped_mem;
 			vmaMapMemory(vmc.va, staging_vmaa, &mapped_mem);
 			memset(mapped_mem, constant, byte_count);
@@ -70,7 +70,7 @@ public:
 
 			vk::CommandBuffer& cb = vcc.get_one_time_transfer_buffer();
 
-			vk::BufferCopy copy_region{};
+			vk::BufferCopy copy_region;
 			copy_region.srcOffset = 0;
 			copy_region.dstOffset = 0;
 			copy_region.size = byte_count;
@@ -88,13 +88,14 @@ public:
 		}
 	}
 
-	void update_data_bytes(const void* data, std::size_t byte_count)
+	void update_data_bytes(const void* data, std::size_t byte_count, std::size_t offset = 0)
 	{
 		VKTE_ASSERT(byte_count <= byte_size, "vkte: Data is larger than buffer!");
+		VKTE_ASSERT(offset + byte_count <= byte_size, "vkte: Trying to write outside of the buffer!");
 
 		if (device_local)
 		{
-			auto [staging_buffer, staging_vmaa] = create_buffer((vk::BufferUsageFlagBits::eTransferSrc), VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, true, QueueFamilyFlags::Transfer);
+			auto [staging_buffer, staging_vmaa] = create_buffer((vk::BufferUsageFlagBits::eTransferSrc), VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, byte_count, true, QueueFamilyFlags::Transfer);
 			void* mapped_mem;
 			vmaMapMemory(vmc.va, staging_vmaa, &mapped_mem);
 			memcpy(mapped_mem, data, byte_count);
@@ -102,9 +103,9 @@ public:
 
 			vk::CommandBuffer& cb = vcc.get_one_time_transfer_buffer();
 
-			vk::BufferCopy copy_region{};
+			vk::BufferCopy copy_region;
 			copy_region.srcOffset = 0;
-			copy_region.dstOffset = 0;
+			copy_region.dstOffset = offset;
 			copy_region.size = byte_count;
 			cb.copyBuffer(staging_buffer, buffer, copy_region);
 			vcc.submit_transfer(cb, true);
@@ -115,15 +116,15 @@ public:
 		{
 			void* mapped_mem;
 			vmaMapMemory(vmc.va, vmaa, &mapped_mem);
-			memcpy(mapped_mem, data, byte_count);
+			memcpy((uint8_t*)(mapped_mem) + offset, data, byte_count);
 			vmaUnmapMemory(vmc.va, vmaa);
 		}
 	}
 
 	template<class T>
-	void update_data(const T* data, std::size_t elements)
+	void update_data(const T* data, std::size_t elements, std::size_t offset = 0)
 	{
-		update_data_bytes(data, sizeof(T) * elements);
+		update_data_bytes(data, sizeof(T) * elements, sizeof(T) * offset);
 	}
 
 	template<class T>
@@ -144,10 +145,10 @@ public:
 
 		if (device_local)
 		{
-			auto [staging_buffer, staging_vmaa] = create_buffer((vk::BufferUsageFlagBits::eTransferDst), VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, false, QueueFamilyFlags::Transfer);
+			auto [staging_buffer, staging_vmaa] = create_buffer((vk::BufferUsageFlagBits::eTransferDst), VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, byte_count, false, QueueFamilyFlags::Transfer);
 
 			vk::CommandBuffer& cb = vcc.get_one_time_transfer_buffer();
-			vk::BufferCopy copy_region{};
+			vk::BufferCopy copy_region;
 			copy_region.srcOffset = 0;
 			copy_region.dstOffset = 0;
 			copy_region.size = byte_count;
@@ -218,7 +219,7 @@ public:
 	void* pNext = nullptr;
 
 private:
-	std::pair<vk::Buffer, VmaAllocation> create_buffer(vk::BufferUsageFlags usage_flags, VmaAllocationCreateFlags vma_flags, bool device_local, Queues queues)
+	std::pair<vk::Buffer, VmaAllocation> create_buffer(vk::BufferUsageFlags usage_flags, VmaAllocationCreateFlags vma_flags, std::size_t byte_size, bool device_local, Queues queues)
 	{
 		std::vector<uint32_t> queue_indices = vmc.queue_families.get(queues);
 		vk::BufferCreateInfo bci;
