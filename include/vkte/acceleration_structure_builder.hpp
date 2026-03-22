@@ -3,6 +3,7 @@
 #include "vkte/vulkan_main_context.hpp"
 #include "vkte/vulkan_command_context.hpp"
 #include "vkte/storage.hpp"
+#include <set>
 
 namespace vkte
 {
@@ -59,7 +60,7 @@ private:
 	Storage& storage;
 	vk::WriteDescriptorSetAccelerationStructureKHR wdsas;
 	std::vector<BLAS> bottom_level_as;
-	std::vector<uint32_t> blas_update_indices;
+	std::set<uint32_t> blas_update_indices;
 	std::vector<vk::BufferMemoryBarrier> blas_memory_barriers;
 	std::vector<vk::AccelerationStructureInstanceKHR> instances;
 	int32_t instances_buffer = -1;

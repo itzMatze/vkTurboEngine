@@ -96,7 +96,7 @@ uint32_t AccelerationStructureBuilder::add_blas(const std::string& buffer_name, 
 
 void AccelerationStructureBuilder::update_blas(uint32_t blas_idx)
 {
-	blas_update_indices.push_back(blas_idx);
+	blas_update_indices.emplace(blas_idx);
 }
 
 uint32_t AccelerationStructureBuilder::add_instance(uint32_t blas_idx, const vk::TransformMatrixKHR& M, uint32_t custom_index)
@@ -171,19 +171,28 @@ void AccelerationStructureBuilder::update_tlas(vk::CommandBuffer& cb, QueueFamil
 {
 	std::vector<vk::AccelerationStructureBuildGeometryInfoKHR> asbgis;
 	std::vector<vk::AccelerationStructureBuildRangeInfoKHR*> pasbris;
-	std::vector<vk::BufferMemoryBarrier> blas_memory_barriers;
+	std::vector<vk::BufferMemoryBarrier2> blas_memory_barriers;
 	for (uint32_t blas_idx : blas_update_indices)
 	{
 		BLAS& blas = bottom_level_as[blas_idx];
 		asbgis.push_back(blas.asbgi);
 		pasbris.push_back(blas.asbris.data());
-		blas_memory_barriers.push_back(vk::BufferMemoryBarrier(vk::AccessFlagBits::eAccelerationStructureWriteKHR, vk::AccessFlagBits::eAccelerationStructureReadKHR, vmc.queue_families.get(build_queue), vmc.queue_families.get(build_queue), storage.get_buffer(blas.buffer).get(), 0, storage.get_buffer(blas.buffer).get_byte_size()));
+		blas_memory_barriers.push_back(vk::BufferMemoryBarrier2(vk::PipelineStageFlagBits2::eAccelerationStructureBuildKHR, vk::AccessFlagBits2::eAccelerationStructureWriteKHR, vk::PipelineStageFlagBits2::eAccelerationStructureBuildKHR, vk::AccessFlagBits2::eAccelerationStructureReadKHR, vmc.queue_families.get(build_queue), vmc.queue_families.get(build_queue), storage.get_buffer(blas.buffer).get(), 0, storage.get_buffer(blas.buffer).get_byte_size()));
 	}
 	blas_update_indices.clear();
 	cb.buildAccelerationStructuresKHR(asbgis, pasbris);
-	cb.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlagBits::eDeviceGroup, {}, blas_memory_barriers, {});
+	vk::DependencyInfo blas_dependency_info;
+	blas_dependency_info.dependencyFlags = vk::DependencyFlagBits::eDeviceGroup;
+	blas_dependency_info.bufferMemoryBarrierCount = blas_memory_barriers.size();
+	blas_dependency_info.pBufferMemoryBarriers = blas_memory_barriers.data();
+	cb.pipelineBarrier2(blas_dependency_info);
 	cb.buildAccelerationStructuresKHR({top_level_as.asbgi}, {&top_level_as.asbri});
-	vk::BufferMemoryBarrier barrier(vk::AccessFlagBits::eAccelerationStructureWriteKHR, vk::AccessFlagBits::eAccelerationStructureReadKHR, vmc.queue_families.get(build_queue), vmc.queue_families.get(build_queue), storage.get_buffer(top_level_as.buffer).get(), 0, storage.get_buffer(top_level_as.buffer).get_byte_size());
-	cb.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::PipelineStageFlagBits::eAllCommands, vk::DependencyFlagBits::eDeviceGroup, {}, {barrier}, {});
+	const vkte::Buffer& buffer = storage.get_buffer(top_level_as.buffer);
+	vk::BufferMemoryBarrier2 barrier = vk::BufferMemoryBarrier2(vk::PipelineStageFlagBits2::eAccelerationStructureBuildKHR, vk::AccessFlagBits2::eAccelerationStructureWriteKHR, vk::PipelineStageFlagBits2::eAllCommands, vk::AccessFlagBits2::eAccelerationStructureReadKHR, vmc.queue_families.get(build_queue), vmc.queue_families.get(build_queue), buffer.get(), 0, buffer.get_byte_size());
+	vk::DependencyInfo tlas_dependency_info;
+	tlas_dependency_info.dependencyFlags = vk::DependencyFlagBits::eDeviceGroup;
+	tlas_dependency_info.bufferMemoryBarrierCount = 1;
+	tlas_dependency_info.pBufferMemoryBarriers = &barrier;
+	cb.pipelineBarrier2(tlas_dependency_info);
 }
 } // namespace vkte
