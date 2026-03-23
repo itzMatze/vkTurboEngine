@@ -23,7 +23,7 @@ public:
 	void add_specialization_constant(uint32_t id, T data)
 	{
 		static_assert(sizeof(T) == 4, "Can only use 4 byte specialization constants.");
-		spec_entries_data.push_back(data);
+		spec_entries_data.push_back(std::bit_cast<uint32_t>(data));
 		spec_entries.push_back(vk::SpecializationMapEntry(id, 4 * spec_entries.size(), 4));
 	}
 
