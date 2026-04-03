@@ -11,6 +11,7 @@ void DescriptorSetHandler::add_binding(uint32_t binding, vk::DescriptorType type
 	descriptor_count = std::max(descriptor_count, 1u);
 	for (auto i = descriptors.begin(); i != descriptors.end(); ++i)
 	{
+		VKTE_ASSERT(i->dslb.binding != binding, "Trying to add a binding that has already been added!")
 		if (i->dslb.binding > binding)
 		{
 			descriptors.insert(i, Descriptor(binding, type, stages, descriptor_count, set_count));
@@ -31,8 +32,10 @@ void DescriptorSetHandler::add_descriptor(uint32_t set, uint32_t binding, const 
 				d->dbi[set].push_back(vk::DescriptorBufferInfo(b.get(), 0, b.get_byte_size()));
 				d->pNext[set] = b.pNext;
 			}
+			return;
 		}
 	}
+	VKTE_THROW("Trying to add a buffer descriptor to a non-existent binding!");
 }
 
 void DescriptorSetHandler::add_descriptor(uint32_t set, uint32_t binding, const Buffer& buffer)
@@ -50,8 +53,10 @@ void DescriptorSetHandler::add_descriptor(uint32_t set, uint32_t binding, const 
 			{
 				d->dii[set].push_back(vk::DescriptorImageInfo(i.get_sampler(), i.get_view(), i.get_layout()));
 			}
+			return;
 		}
 	}
+	VKTE_THROW("Trying to add an image descriptor to a non-existent binding!");
 }
 
 void DescriptorSetHandler::add_descriptor(uint32_t set, uint32_t binding, const Image& image)
