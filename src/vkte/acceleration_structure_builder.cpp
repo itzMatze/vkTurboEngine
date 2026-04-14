@@ -23,7 +23,11 @@ void AccelerationStructureBuilder::clean_up_scratch_buffers(bool keep_dynamic)
 {
 	for (BLAS& blas : bottom_level_as)
 	{
-		if (blas.scratch_buffer > -1 && (!keep_dynamic || !blas.dynamic)) storage.destroy_buffer(blas.scratch_buffer);
+		if (blas.scratch_buffer > -1 && (!keep_dynamic || !blas.dynamic))
+		{
+			storage.destroy_buffer(blas.scratch_buffer);
+			blas.scratch_buffer = -1;
+		}
 	}
 	if (top_level_as.scratch_buffer > -1 && !keep_dynamic) storage.destroy_buffer(top_level_as.scratch_buffer);
 	if (instances_buffer > -1 && !keep_dynamic) storage.destroy_buffer(instances_buffer);

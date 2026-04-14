@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vkte/vulkan_main_context.hpp"
-#include "vkte/vulkan_command_context.hpp"
 #include "vkte/storage.hpp"
 #include <set>
 
@@ -12,7 +11,7 @@ class AccelerationStructureBuilder
 public:
 	AccelerationStructureBuilder(const VulkanMainContext& vmc, Storage& storage);
 	void destruct();
-	void clean_up_scratch_buffers(bool keep_dynamic);
+	void clean_up_scratch_buffers(bool keep_dynamic = true);
 	struct BLASData
 	{
 		// id to the buffer in the storage class
