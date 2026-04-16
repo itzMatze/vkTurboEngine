@@ -9,6 +9,7 @@ namespace vkte
 {
 void Window::construct(const std::string& title, const uint32_t width, const uint32_t height)
 {
+	SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "wayland,x11");
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 	window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_VULKAN);
 }

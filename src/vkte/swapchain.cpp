@@ -147,25 +147,25 @@ vk::PresentModeKHR Swapchain::choose_present_mode(bool vsync)
 
 vk::Extent2D Swapchain::choose_extent()
 {
-	vk::SurfaceCapabilitiesKHR capabilities = vmc.get_surface_capabilities();
+	const vk::SurfaceCapabilitiesKHR capabilities = vmc.get_surface_capabilities();
 	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
-		extent = capabilities.currentExtent;
+		return capabilities.currentExtent;
 	}
-	else
+	int32_t width = 0;
+	int32_t height = 0;
+	SDL_GetWindowSizeInPixels(vmc.window.get(), &width, &height);
+	if (width <= 0 || height <= 0)
 	{
-		int32_t width, height;
-		SDL_Event e;
-		do
-		{
-			SDL_GetWindowSizeInPixels(vmc.window.get(), &width, &height);
-			SDL_WaitEvent(&e);
-		} while (width == 0 || height == 0);
-		vk::Extent2D extent(width, height);
-		extent.width = std::clamp(extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-		extent.height = std::clamp(extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+		vk::Extent2D fallback = capabilities.minImageExtent;
+		fallback.width = std::max(1u, fallback.width);
+		fallback.height = std::max(1u, fallback.height);
+		return fallback;
 	}
-	return extent;
+	vk::Extent2D chosen(width, height);
+	chosen.width = std::clamp(chosen.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+	chosen.height = std::clamp(chosen.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+	return chosen;
 }
 
 vk::SurfaceFormatKHR Swapchain::choose_surface_format()
