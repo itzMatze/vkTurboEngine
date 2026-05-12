@@ -24,8 +24,8 @@ struct ImageTransitionDesc
 	vk::AccessFlags2 src_access = vk::AccessFlagBits2::eNone;
 	vk::PipelineStageFlags2 dst_stage = vk::PipelineStageFlagBits2::eNone;
 	vk::AccessFlags2 dst_access = vk::AccessFlagBits2::eNone;
-	int32_t src_queue_family = VK_QUEUE_FAMILY_IGNORED;
-	int32_t dst_queue_family = VK_QUEUE_FAMILY_IGNORED;
+	uint32_t src_queue_family = VK_QUEUE_FAMILY_IGNORED;
+	uint32_t dst_queue_family = VK_QUEUE_FAMILY_IGNORED;
 };
 
 bool has_stencil(vk::Format depth_format);

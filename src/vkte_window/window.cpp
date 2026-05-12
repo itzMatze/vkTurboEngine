@@ -9,9 +9,14 @@ namespace vkte
 {
 void Window::construct(const std::string& title, const uint32_t width, const uint32_t height)
 {
+#ifdef __linux__
 	SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "wayland,x11");
+#endif
 	SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_CURSOR_VISIBLE, "1");
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS))
+	{
+		VKTE_ERROR("Failed to initialize SDL: {}", SDL_GetError());
+	}
 	window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 }
 
