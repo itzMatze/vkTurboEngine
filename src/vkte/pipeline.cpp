@@ -55,6 +55,16 @@ std::string get_slang_stage(vk::ShaderStageFlagBits stage_flag)
 	return "";
 }
 
+bool is_command_available(const std::string& command)
+{
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+	std::string check = "where " + command + " >nul 2>nul";
+#else
+	std::string check = "command -v " + command + " >/dev/null 2>&1";
+#endif
+	return std::system(check.c_str()) == 0;
+}
+
 bool compile_shader(const vk::Device& device, const Shader& shader, vk::PipelineShaderStageCreateInfo& pssci, vk::SpecializationInfo& spec_info)
 {
 	std::filesystem::path shader_dir("shader/");
@@ -62,8 +72,6 @@ bool compile_shader(const vk::Device& device, const Shader& shader, vk::Pipeline
 	if (!std::filesystem::exists(shader_bin_dir)) std::filesystem::create_directory(shader_bin_dir);
 	std::filesystem::path shader_file(shader_dir / shader.name);
 	std::filesystem::path shader_bin_file(shader_bin_dir / (shader.name + ".spv"));
-	VKTE_ASSERT(std::filesystem::exists(shader_file), "vkte: Failed to find shader file \"" + shader.name + "\"");
-	if (std::filesystem::exists(shader_bin_file)) std::filesystem::remove(shader_bin_file);
 	std::string command;
 	std::string args;
 	if (shader.lang == Language::Glsl)
@@ -82,8 +90,22 @@ bool compile_shader(const vk::Device& device, const Shader& shader, vk::Pipeline
 	command += ".exe";
 #elif __linux__
 #endif
-	system((command + " " + args).c_str());
-	if (!std::filesystem::exists(shader_bin_file)) return false;
+	if (is_command_available(command))
+	{
+		VKTE_ASSERT(std::filesystem::exists(shader_file), "vkte: Failed to find shader file \"" + shader.name + "\"");
+		if (std::filesystem::exists(shader_bin_file)) std::filesystem::remove(shader_bin_file);
+		system((command + " " + args).c_str());
+		if (!std::filesystem::exists(shader_bin_file)) return false;
+	}
+	else
+	{
+		if (!std::filesystem::exists(shader_bin_file))
+		{
+			VKTE_ERROR("vkte: Compiler \"{}\" not available and no cached SPIR-V found for shader \"{}\"", command, shader.name);
+			return false;
+		}
+		VKTE_WARN("vkte: Compiler \"{}\" not available, using cached SPIR-V for shader \"{}\"", command, shader.name);
+	}
 	std::ifstream file(shader_bin_file.string(), std::ios::binary);
 	VKTE_ASSERT(file.is_open(), "vkte: Failed to open shader file \"" + shader.name + "\"");
 	std::ostringstream file_stream;
