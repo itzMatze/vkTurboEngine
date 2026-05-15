@@ -65,9 +65,9 @@ bool is_command_available(const std::string& command)
 	return std::system(check.c_str()) == 0;
 }
 
-bool compile_shader(const vk::Device& device, const Shader& shader, vk::PipelineShaderStageCreateInfo& pssci, vk::SpecializationInfo& spec_info)
+bool compile_shader(const vk::Device& device, const std::string& shader_root_dir, const Shader& shader, vk::PipelineShaderStageCreateInfo& pssci, vk::SpecializationInfo& spec_info)
 {
-	std::filesystem::path shader_dir("shader/");
+	std::filesystem::path shader_dir(shader_root_dir);
 	std::filesystem::path shader_bin_dir(shader_dir / "bin/");
 	if (!std::filesystem::exists(shader_bin_dir)) std::filesystem::create_directory(shader_bin_dir);
 	std::filesystem::path shader_file(shader_dir / shader.name);
@@ -135,14 +135,14 @@ bool Pipeline::compile_shaders()
 		spec_infos.resize(graphics_settings->shaders.size());
 		for (int32_t i = 0; i < graphics_settings->shaders.size(); i++)
 		{
-			if (!compile_shader(vmc.logical_device.get(), graphics_settings->shaders[i], shader_stages[i], spec_infos[i])) return false;
+			if (!compile_shader(vmc.logical_device.get(), vmc.shader_root_dir, graphics_settings->shaders[i], shader_stages[i], spec_infos[i])) return false;
 		}
 	}
 	else if (type == Type::Compute)
 	{
 		shader_stages.resize(1);
 		spec_infos.resize(1);
-		if (!compile_shader(vmc.logical_device.get(), compute_settings->shader, shader_stages[0], spec_infos[0])) return false;
+		if (!compile_shader(vmc.logical_device.get(), vmc.shader_root_dir, compute_settings->shader, shader_stages[0], spec_infos[0])) return false;
 	}
 	return true;
 }
